@@ -1,0 +1,17 @@
+{
+  "outputDirectory": "public",
+  "functions": {
+    "api/quotes.js": {
+      "maxDuration": 30
+    },
+    "api/tick.js": {
+      "maxDuration": 60
+    },
+    "api/dashboard.js": {
+      "maxDuration": 30
+    },
+    "api/control.js": {
+      "maxDuration": 30
+    }
+  }
+}

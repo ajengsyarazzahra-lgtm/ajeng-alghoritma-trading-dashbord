@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard UAS Bot Dry Run Indodax</title>
+<style>
+:root{color-scheme:dark;--bg:#090d16;--card:#111827;--card2:#0d1422;--line:#243047;--tx:#e6ebf4;--mut:#9aa7be;--cy:#22d3ee;--up:#00e676;--dn:#ff6262;--yl:#ffd166}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-variant-numeric:tabular-nums}
+a{color:var(--cy)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 22px;background:var(--card2);border-bottom:1px solid var(--line)}
+.top h1{margin:0;color:#fff;font-size:20px}
+.top p{margin:3px 0 0;color:var(--mut);font-size:12px}
+.top .student{text-align:right;color:var(--mut);font-size:12px}
+.wrap{max-width:1480px;margin:auto;padding:16px}
+.notice{padding:12px 14px;margin-bottom:14px;border:1px solid #735b1d;border-left:4px solid var(--yl);border-radius:5px;background:#1a1920}
+.notice strong{color:var(--yl)}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;margin-bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:6px}
+.toolbar input[type=file]{max-width:100%;padding:7px;background:var(--card2);border:1px solid var(--line);border-radius:4px}
+.toolbar button,.btn{padding:7px 11px;background:#16233b;border:1px solid var(--line);border-radius:4px;cursor:pointer;text-decoration:none}
+.toolbar button:hover,.btn:hover{border-color:var(--cy)}
+.toolbar .hint{color:var(--mut);font-size:12px}
+.status{margin-left:auto;color:var(--mut);font-size:12px}
+.status.error{color:var(--dn)}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.nav a{padding:6px 11px;background:var(--card);border:1px solid var(--line);border-radius:16px;color:var(--tx);font-size:12px;text-decoration:none}
+.nav a:hover{border-color:var(--cy)}
+.section{scroll-margin-top:12px;margin:0 0 14px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:6px;min-width:0}
+.section h2{margin:0 0 10px;font-size:16px}
+.section h3{margin:16px 0 7px;font-size:14px;color:var(--cy)}
+.muted{color:var(--mut)}
+.small{font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.metric{min-width:0;padding:10px 12px;background:var(--card2);border:1px solid var(--line);border-radius:5px}
+.metric span{display:block;color:var(--mut);font-size:11px}
+.metric strong{display:block;margin:3px 0;font-size:20px;overflow-wrap:anywhere}
+.metric small{display:block;color:var(--mut);font-size:11px}
+.up{color:var(--up)}.dn{color:var(--dn)}.cy{color:var(--cy)}.yl{color:var(--yl)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:14px}
+.table-wrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:7px 9px;border-bottom:1px solid #1b263a;text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card2);color:var(--mut);font-weight:500;z-index:1}
+th:first-child,td:first-child{text-align:left}
+td.wrap{white-space:normal;overflow-wrap:anywhere}
+.chart{width:100%;min-height:180px;background:var(--card2);border-radius:4px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--mut);font-size:12px;margin:6px 0}
+.legend i{display:inline-block;width:16px;height:3px;margin:0 5px 3px 0;vertical-align:middle}
+.empty{padding:14px;border:1px dashed var(--line);border-radius:4px;color:var(--mut);text-align:center}
+.warnings{margin:8px 0 0;padding-left:20px;color:var(--yl);font-size:12px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--cy)}
+pre{max-height:330px;overflow:auto;padding:12px;background:#080c14;border:1px solid var(--line);border-radius:4px;color:#cbd5e1;font:12px/1.5 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);font-size:12px}
+@media(max-width:650px){.wrap{padding:10px}.top{padding:12px}.top .student{text-align:left}.status{margin-left:0;width:100%}.section{padding:11px}.metric strong{font-size:18px}}
+@media print{body{background:#fff;color:#111}.top,.section,.metric,.toolbar,.nav{background:#fff;color:#111;border-color:#aaa}.toolbar,.nav{display:none}.muted,.metric span,.metric small{color:#444}.section{break-inside:avoid}.table-wrap{max-height:none;overflow:visible}th{position:static;background:#eee;color:#111}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Dashboard UAS — Bot Dry Run Indodax</h1>
+    <p>Perbandingan backtest dan forward test 10 hari · data hanya dari log yang Anda muat</p>
+  </div>
+  <div class="student">Ajeng Syarafina Azzahra · NIM 25110200042</div>
+</header>
+<main class="wrap">
+  <div class="notice"><strong>Dashboard belum berisi hasil.</strong> Muat JSON log asli bot/backtest untuk menghitung metrik. Tidak ada angka trading contoh atau angka backtest saham lama yang dipakai sebagai pengganti data Indodax.</div>
+  <div class="toolbar">
+    <label for="fileInput"><b>Muat log JSON</b></label>
+    <input id="fileInput" type="file" accept=".json,application/json">
+    <button id="templateButton" type="button">Unduh template skema log</button>
+    <span class="hint">Offline · file diproses lokal di peramban dan tidak diunggah</span>
+    <span id="loadStatus" class="status" role="status" aria-live="polite">Belum ada file dimuat</span>
+  </div>
+  <nav class="nav" aria-label="Navigasi dashboard">
+    <a href="#summary">Ringkasan</a><a href="#comparison">Kecocokan</a><a href="#operations">Operasional</a><a href="#rules">Aturan &amp; data</a><a href="#reflection">Refleksi</a><a href="#schema">Format log</a>
+  </nav>
+  <section class="section" id="summary">
+    <h2>Ringkasan hasil</h2>
+    <div id="identity" class="muted small">Muat JSON untuk melihat periode, strategi, universe, dan status kecukupan data.</div>
+    <h3>Backtest historis</h3>
+    <div id="backtestMetrics" class="grid"><div class="empty">Menunggu log backtest.</div></div>
+    <h3>Forward test (tanpa CAGR)</h3>
+    <div id="forwardMetrics" class="grid"><div class="empty">Menunggu log forward test 10 hari.</div></div>
+    <div class="two" style="margin-top:12px">
+      <div><h3>Ekuitas &amp; benchmark</h3><div id="equityChart" class="empty">Kurva akan dihitung dari log ekuitas dan harga BTC/IDR.</div></div>
+      <div><h3>Eksekusi &amp; biaya</h3><div id="executionMetrics" class="grid"><div class="empty">Menunggu log order simulasi.</div></div></div>
+    </div>
+    <div id="dataWarnings"></div>
+  </section>
+  <section class="section" id="comparison">
+    <h2>Kecocokan backtest vs forward</h2>
+    <p class="muted small">Sinyal backtest diiris ke jendela tanggal forward test yang sama; dibandingkan per candle, pasangan, dan sisi, termasuk sinyal duplikat. Perbedaan fill dihitung hanya untuk order yang cocok berdasarkan waktu sinyal, pasangan, dan sisi.</p>
+    <div id="comparisonMetrics" class="grid"><div class="empty">Muat data untuk menghitung kecocokan.</div></div>
+    <h3>Perbedaan sinyal</h3><div id="signalDiff" class="table-wrap"><div class="empty">Belum ada perbandingan.</div></div>
+  </section>
+  <section class="section" id="operations">
+    <h2>Panel operasional forward test</h2>
+    <div id="operationsMetrics" class="grid"><div class="empty">Muat log panggilan, error, snapshot, dan kill switch.</div></div>
+    <h3>Error API</h3><div id="errorsTable" class="table-wrap"><div class="empty">Belum ada log error.</div></div>
+    <h3>Order simulasi terbaru</h3><div id="ordersTable" class="table-wrap"><div class="empty">Belum ada log order.</div></div>
+  </section>
+  <section class="section" id="rules">
+    <h2>Aturan strategi, eksekusi, dan sumber</h2>
+    <div id="strategyDetails" class="muted">Muat JSON untuk menampilkan metadata strategi dan rincian sumber fee.</div>
+    <h3>Pemeriksaan data</h3><div id="qualityChecks" class="muted small">Belum ada data untuk diperiksa.</div>
+  </section>
+  <section class="section" id="reflection">
+    <h2>Refleksi selisih</h2>
+    <div id="reflectionContent" class="muted">Refleksi numerik akan dibuat dari kecocokan sinyal, selisih return, fill, biaya, spread, keterlambatan, serta uptime. Penyebab yang tidak didukung log tidak akan disimpulkan otomatis.</div>
+  </section>
+  <section class="section" id="schema">
+    <h2>Format JSON log yang dibaca</h2>
+    <p class="muted small">Gunakan kunci dan struktur berikut. Waktu berupa ISO-8601 dengan zona waktu. Catat keputusan setiap pasangan/candle pada <code>signals</code>, termasuk <code>hold</code> atau <code>no_signal</code> ketika tidak ada aksi; order terisi harus berstatus <code>filled</code>. Nilai biaya adalah Rupiah, dan <code>signalPrice</code> adalah harga acuan saat sinyal diputuskan. Isi <code>spreadCost</code> dan <code>slippageCost</code> dari hasil ukur/rekonsiliasi eksekusi; jangan menebaknya.</p>
+    <details><summary>Lihat skema dan definisi field</summary>
+<pre>{
+  "schemaVersion": 1,
+  "metadata": {
+    "strategyName": "",
+    "timeframeMinutes": 60,
+    "pairs": [],
+    "pairSelectionCriteria": "",
+    "entryRule": "",
+    "exitRule": "",
+    "sizingRule": "",
+    "parameters": {},
+    "changesFromUts": "",
+    "signalCodeRef": "",
+    "initialCapital": 100000000,
+    "freezeAt": "",
+    "backtestStart": "",
+    "backtestEnd": "",
+    "historicalDataSourceUrl": "",
+    "historicalDataAccessDate": "",
+    "backtestSnapshotCount": null,
+    "backtestMedianSlippagePct": null,
+    "forwardStart": "",
+    "forwardEnd": "",
+    "takerFeeRate": null,
+    "feeApiUrl": "",
+    "feeApiTakerRate": null,
+    "feePageUrl": "",
+    "feePageTakerRate": null,
+    "feeAccessDate": "",
+    "minimumOrderIdr": null,
+    "backtestMedianSpreadPct": null,
+    "maxOpenPositions": null,
+    "maxPositionPct": null,
+    "dailyLossLimitPct": null,
+    "equityValuation": "best bid; daily sample after 00:00 WIB"
+  },
+  "backtest": {
+    "equity": [{"time":"", "equity":0, "cash":0, "positionsValue":0}],
+    "benchmark": [{"time":"", "price":0}],
+    "signals": [{"time":"", "pair":"", "action":"buy|sell|hold"}],
+    "orders": [{
+      "time":"", "signalTime":"", "pair":"", "side":"buy|sell",
+      "status":"filled", "quantity":0, "signalPrice":0,
+      "bestBid":0, "bestAsk":0, "fillPrice":0, "fee":0,
+      "spreadCost":0, "slippageCost":0
+    }]
+  },
+  "forward": {
+    "scheduledCandles": [{"candleTime":"", "closesAt":""}],
+    "calls": [{"candleTime":"", "scheduledAt":"", "calledAt":"", "status":"processed|error"}],
+    "equity": [{"time":"", "equity":0, "cash":0, "positionsValue":0}],
+    "benchmark": [{"time":"", "price":0}],
+    "signals": [{"time":"", "pair":"", "action":"buy|sell|hold"}],
+    "orders": [],
+    "errors": [{"time":"", "source":"", "message":""}],
+    "snapshots": [{"time":"", "pair":"", "bid":0, "ask":0}],
+    "killSwitchEvents": [{"time":"", "enabled":true, "reason":""}]
+  }
+}</pre>
+    <p class="muted small">Order berstatus filled perlu menyimpan kuantitas, harga sinyal, harga fill, fee, biaya spread, dan biaya slippage. <code>equity</code> adalah log ekuitas setelah posisi terbuka dinilai pada best bid; benchmark berisi harga BTC/IDR pada waktu yang sama. Candle yang dijadwalkan harus dicantumkan agar uptime dapat dihitung. Data yang tidak tersedia ditampilkan sebagai “—”, tidak diasumsikan nol.</p>
+    </details>
+  </section>
+</main>
+<footer>Dashboard offline untuk tugas UAS Algoritma Trading. Sumber harga dan order book harus berasal dari API publik Indodax; tidak ada koneksi API, transaksi riil, atau penggunaan API key dari halaman ini. Bukan rekomendasi investasi.</footer>
+<script>
+'use strict';
+
+const $ = selector => document.querySelector(selector);
+const EMPTY_PART = () => ({equity: [], benchmark: [], signals: [], orders: []});
+let dataset = null;
+let warnings = [];
+
+function esc(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[char]));
+}
+
+function asArray(value, label) {
+  if (Array.isArray(value)) return value;
+  warnings.push(`${label} tidak tersedia atau bukan array.`);
+  return [];
+}
+
+function finite(value) {
+  if (value == null || typeof value === 'boolean' || (typeof value === 'string' && value.trim() === '')) return null;
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function timeValue(value) {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function fmtNumber(value, digits = 2) {
+  return Number.isFinite(value) ? new Intl.NumberFormat('id-ID', {maximumFractionDigits: digits}).format(value) : '—';
+}
+
+function fmtPct(value, digits = 2) {
+  return Number.isFinite(value) ? `${fmtNumber(value * 100, digits)}%` : '—';
+}
+
+function fmtMoney(value, digits = 0) {
+  return Number.isFinite(value) ? `Rp${fmtNumber(value, digits)}` : '—';
+}
+
+function fmtDate(value) {
+  const parsed = timeValue(value);
+  return parsed == null ? '—' : new Intl.DateTimeFormat('id-ID', {dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta'}).format(parsed);
+}
+
+function sectionArray(part, key, label) {
+  if (!part || typeof part !== 'object') {
+    warnings.push(`${label} tidak tersedia.`);
+    return [];
+  }
+  return asArray(part[key], `${label}.${key}`);
+}
+
+function validateData(raw) {
+  warnings = [];
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('JSON harus berisi satu object pada tingkat teratas.');
+  if (Number(raw.schemaVersion) !== 1) throw new Error('schemaVersion harus bernilai 1. Gunakan template skema di dashboard.');
+  if (!raw.metadata || typeof raw.metadata !== 'object') throw new Error('Field metadata tidak ditemukan.');
+  if (!raw.backtest || typeof raw.backtest !== 'object') throw new Error('Field backtest tidak ditemukan.');
+  if (!raw.forward || typeof raw.forward !== 'object') throw new Error('Field forward tidak ditemukan.');
+  const backtest = {...EMPTY_PART(), ...raw.backtest};
+  const forward = {...EMPTY_PART(), ...raw.forward};
+  for (const [part, label] of [[backtest, 'backtest'], [forward, 'forward']]) {
+    for (const key of ['equity', 'benchmark', 'signals', 'orders']) {
+      if (!Array.isArray(part[key])) {
+        warnings.push(`${label}.${key} tidak tersedia atau bukan array.`);
+        part[key] = [];
+      }
+    }
+  }
+  for (const key of ['scheduledCandles', 'calls', 'errors', 'snapshots', 'killSwitchEvents']) {
+    if (!Array.isArray(forward[key])) {
+      warnings.push(`forward.${key} tidak tersedia atau bukan array.`);
+      forward[key] = [];
+    }
+  }
+  if (!Array.isArray(raw.metadata.pairs)) warnings.push('metadata.pairs tidak tersedia atau bukan array.');
+  const pairs = Array.isArray(raw.metadata.pairs) ? raw.metadata.pairs : [];
+  if (pairs.length < 3 || pairs.length > 10) warnings.push(`Universe berisi ${pairs.length} pasangan; ketentuan tugas adalah 3–10 pasangan IDR.`);
+  return {...raw, backtest, forward, metadata: {...raw.metadata, pairs}};
+}
+
+function equityNumber(row) {
+  const direct = finite(row && row.equity);
+  if (direct != null) return direct;
+  const cash = finite(row && row.cash);
+  const positions = finite(row && row.positionsValue);
+  return cash != null && positions != null ? cash + positions : null;
+}
+
+function sortedSeries(rows, valueFn, label) {
+  const valid = [];
+  rows.forEach(row => {
+    const time = timeValue(row && row.time);
+    const value = valueFn(row);
+    if (time == null || value == null) {
+      warnings.push(`${label}: satu baris diabaikan karena waktu/nilainya tidak valid.`);
+      return;
+    }
+    valid.push({time, value, row});
+  });
+  valid.sort((a, b) => a.time - b.time);
+  return valid;
+}
+
+function periodSeries(rows, start, end, valueFn, label) {
+  const startTime = timeValue(start);
+  const endTime = timeValue(end);
+  return sortedSeries(rows, valueFn, label).filter(point =>
+    (startTime == null || point.time >= startTime) && (endTime == null || point.time <= endTime)
+  );
+}
+
+function drawdown(series) {
+  if (!series.length) return null;
+  let peak = series[0].value;
+  let worst = 0;
+  for (const point of series) {
+    peak = Math.max(peak, point.value);
+    if (peak > 0) worst = Math.min(worst, point.value / peak - 1);
+  }
+  return worst;
+}
+
+function returnTotal(series) {
+  if (series.length < 2 || series[0].value <= 0) return null;
+  return series[series.length - 1].value / series[0].value - 1;
+}
+
+function yearsBetween(series) {
+  if (series.length < 2) return null;
+  return (series[series.length - 1].time - series[0].time) / (365.2425 * 24 * 60 * 60 * 1000);
+}
+
+function cagr(series) {
+  const years = yearsBetween(series);
+  const result = returnTotal(series);
+  if (years == null || years <= 0 || result == null || result <= -1) return null;
+  return Math.pow(1 + result, 1 / years) - 1;
+}
+
+function normalizeSide(value) {
+  const side = String(value || '').toLowerCase();
+  if (['buy', 'beli', 'bid'].includes(side)) return 'buy';
+  if (['sell', 'jual', 'ask'].includes(side)) return 'sell';
+  return '';
+}
+
+function normalizeSignalAction(value) {
+  const action = String(value || '').toLowerCase().replace(/[\s-]+/g, '_');
+  if (['buy', 'beli', 'long', 'entry'].includes(action)) return 'buy';
+  if (['sell', 'jual', 'exit'].includes(action)) return 'sell';
+  if (['hold', 'none', 'no_signal', 'no_action', 'skip'].includes(action)) return 'hold';
+  return '';
+}
+
+function usableOrders(rows, label) {
+  return rows.map((row, index) => ({row, index, time: timeValue(row && row.time)}))
+    .filter(item => {
+      const status = String(item.row.status || '').toLowerCase();
+      if (status !== 'filled') return false;
+      if (item.time == null) warnings.push(`${label}: order filled tanpa waktu yang valid diabaikan.`);
+      return item.time != null;
+    })
+    .sort((a, b) => a.time - b.time || a.index - b.index);
+}
+
+function orderCosts(row, quantity, label) {
+  const fee = finite(row.fee);
+  const spread = finite(row.spreadCost);
+  const slippage = finite(row.slippageCost);
+  if (fee == null || spread == null || slippage == null || fee < 0 || spread < 0 || slippage < 0) {
+    warnings.push(`${label}: fee/spreadCost/slippageCost order filled tidak lengkap atau tidak valid.`);
+  }
+  return {
+    fee: fee == null ? null : fee,
+    spread: spread == null ? null : spread,
+    slippage: slippage == null ? null : slippage,
+    complete: fee != null && spread != null && slippage != null && fee >= 0 && spread >= 0 && slippage >= 0,
+    quantity
+  };
+}
+
+function reconstructTrades(rows, label) {
+  const inventory = new Map();
+  const trades = [];
+  for (const {row, time} of usableOrders(rows, label)) {
+    const pair = String(row.pair || '').toUpperCase();
+    const side = normalizeSide(row.side);
+    const quantity = finite(row.quantity == null ? row.qty : row.quantity);
+    const fillPrice = finite(row.fillPrice);
+    const signalPrice = finite(row.signalPrice);
+    if (!pair || !side || quantity == null || quantity <= 0 || fillPrice == null || fillPrice <= 0) {
+      warnings.push(`${label}: order filled dengan pasangan/sisi/kuantitas/harga tidak valid diabaikan.`);
+      continue;
+    }
+    const costs = orderCosts(row, quantity, label);
+    const lots = inventory.get(pair) || [];
+    if (side === 'buy') {
+      lots.push({quantity, remaining: quantity, fillPrice, signalPrice, time, costs});
+      inventory.set(pair, lots);
+      continue;
+    }
+    let remaining = quantity;
+    while (remaining > 1e-12 && lots.length) {
+      const lot = lots[0];
+      const matched = Math.min(remaining, lot.remaining);
+      const entryRatio = matched / lot.quantity;
+      const exitRatio = matched / quantity;
+      const exitCosts = {
+        fee: costs.fee == null ? null : costs.fee * exitRatio,
+        spread: costs.spread == null ? null : costs.spread * exitRatio,
+        slippage: costs.slippage == null ? null : costs.slippage * exitRatio
+      };
+      const entryCosts = {
+        fee: lot.costs.fee == null ? null : lot.costs.fee * entryRatio,
+        spread: lot.costs.spread == null ? null : lot.costs.spread * entryRatio,
+        slippage: lot.costs.slippage == null ? null : lot.costs.slippage * entryRatio
+      };
+      const feesKnown = entryCosts.fee != null && exitCosts.fee != null;
+      const gross = lot.signalPrice == null || signalPrice == null ? null : (signalPrice - lot.signalPrice) * matched;
+      const costComplete = lot.costs.complete && costs.complete;
+      const totalCosts = costComplete
+        ? entryCosts.fee + entryCosts.spread + entryCosts.slippage + exitCosts.fee + exitCosts.spread + exitCosts.slippage
+        : null;
+      const net = costComplete && gross != null
+        ? gross - totalCosts
+        : feesKnown ? (fillPrice - lot.fillPrice) * matched - entryCosts.fee - exitCosts.fee : null;
+      if (costComplete && gross != null && feesKnown) {
+        const fillNet = (fillPrice - lot.fillPrice) * matched - entryCosts.fee - exitCosts.fee;
+        if (Math.abs(fillNet - net) > Math.max(1, Math.abs(net) * 0.001)) {
+          warnings.push(`${label}: fill PnL dan gross dikurangi fee/spread/slippage berbeda pada ${pair}; periksa rekonsiliasi biaya.`);
+        }
+      }
+      trades.push({
+        pair, quantity: matched, entryTime: lot.time, exitTime: time, gross, net,
+        costs: totalCosts, costsComplete: costComplete
+      });
+      lot.remaining -= matched;
+      remaining -= matched;
+      if (lot.remaining <= 1e-12) lots.shift();
+    }
+    if (remaining > 1e-8) warnings.push(`${label}: order jual ${pair} melebihi posisi long yang tercatat; kelebihan ${fmtNumber(remaining, 8)} tidak dihitung sebagai trade.`);
+  }
+  return trades;
+}
+
+function tradeMetrics(rows, label) {
+  const trades = reconstructTrades(rows, label);
+  const complete = trades.filter(trade => Number.isFinite(trade.net));
+  const winners = complete.filter(trade => trade.net > 0);
+  const losers = complete.filter(trade => trade.net < 0);
+  const grossProfit = trades.reduce((sum, trade) => sum + (Number.isFinite(trade.gross) && trade.gross > 0 ? trade.gross : 0), 0);
+  const knownCostTrades = trades.filter(trade => trade.costsComplete);
+  const costsComplete = trades.length > 0 && knownCostTrades.length === trades.length;
+  const costs = costsComplete ? knownCostTrades.reduce((sum, trade) => sum + trade.costs, 0) : null;
+  const winAmount = winners.reduce((sum, trade) => sum + trade.net, 0);
+  const lossAmount = losers.reduce((sum, trade) => sum + trade.net, 0);
+  return {
+    trades, closed: trades.length, complete: complete.length,
+    winRate: complete.length ? winners.length / complete.length : null,
+    avgWin: winners.length ? winAmount / winners.length : null,
+    avgLoss: losers.length ? lossAmount / losers.length : null,
+    profitFactor: lossAmount < 0 ? winAmount / Math.abs(lossAmount) : (winAmount > 0 ? Infinity : null),
+    grossProfit, costShare: costsComplete && grossProfit > 0 ? costs / grossProfit : null,
+    costs, costsComplete
+  };
+}
+
+function metricCard(title, value, note = '') {
+  return `<div class="metric"><span>${esc(title)}</span><strong>${value}</strong><small>${esc(note)}</small></div>`;
+}
+
+function renderMetricSet(container, items) {
+  $(container).innerHTML = items.join('');
+}
+
+function seriesFor(part, start, end, key, valueFn, label) {
+  return periodSeries(asArray(part[key], label), start, end, valueFn, label);
+}
+
+function benchmarkReturn(rows, capital) {
+  if (rows.length < 2 || rows[0].value <= 0) return null;
+  return capital * (rows[rows.length - 1].value / rows[0].value - 1);
+}
+
+function benchmarkEquity(rows, capital) {
+  if (rows.length < 2 || rows[0].value <= 0 || !Number.isFinite(capital) || capital <= 0) return [];
+  return rows.map(point => ({time: point.time, value: capital * point.value / rows[0].value}));
+}
+
+function signalKey(signal) {
+  const time = timeValue(signal && signal.time);
+  const action = normalizeSignalAction(signal && signal.action);
+  const pair = String(signal && signal.pair || '').toUpperCase();
+  return time == null || !action || !pair ? null : `${time}|${pair}|${action}`;
+}
+
+function signalsInPeriod(rows, start, end) {
+  const lo = timeValue(start), hi = timeValue(end);
+  return rows.filter(row => {
+    const key = signalKey(row);
+    const time = timeValue(row && row.time);
+    return key != null && (lo == null || time >= lo) && (hi == null || time <= hi);
+  });
+}
+
+function orderKey(row) {
+  const time = timeValue(row.signalTime || row.time);
+  const side = normalizeSide(row.side);
+  const pair = String(row.pair || '').toUpperCase();
+  return time == null || !side || !pair ? null : `${time}|${pair}|${side}`;
+}
+
+function compareSignalsAndOrders() {
+  const meta = dataset.metadata;
+  const backSignals = signalsInPeriod(dataset.backtest.signals, meta.forwardStart, meta.forwardEnd);
+  const forwardSignals = signalsInPeriod(dataset.forward.signals, meta.forwardStart, meta.forwardEnd);
+  const countSignals = rows => {
+    const counts = new Map();
+    for (const signal of rows) {
+      const key = signalKey(signal);
+      if (!key) continue;
+      const current = counts.get(key) || {count: 0, row: signal};
+      current.count++;
+      counts.set(key, current);
+    }
+    return counts;
+  };
+  const left = countSignals(backSignals);
+  const right = countSignals(forwardSignals);
+  const keys = new Set([...left.keys(), ...right.keys()]);
+  let matched = 0;
+  let totalKeys = 0;
+  const missingForward = [];
+  const unexpectedForward = [];
+  for (const key of keys) {
+    const back = left.get(key) || {count: 0};
+    const forward = right.get(key) || {count: 0};
+    matched += Math.min(back.count, forward.count);
+    totalKeys += Math.max(back.count, forward.count);
+    if (back.count > forward.count) missingForward.push({row: back.row, count: back.count - forward.count});
+    if (forward.count > back.count) unexpectedForward.push({row: forward.row, count: forward.count - back.count});
+  }
+  const isInForwardWindow = row => {
+    const time = timeValue(row.signalTime || row.time);
+    const start = timeValue(meta.forwardStart), end = timeValue(meta.forwardEnd);
+    return time != null && (start == null || time >= start) && (end == null || time <= end);
+  };
+  const backOrders = dataset.backtest.orders.filter(row => row && isInForwardWindow(row) && String(row.status || '').toLowerCase() === 'filled' && orderKey(row));
+  const forwardOrders = dataset.forward.orders.filter(row => row && isInForwardWindow(row) && String(row.status || '').toLowerCase() === 'filled' && orderKey(row));
+  const backByKey = new Map(backOrders.map(row => [orderKey(row), row]));
+  const forwardByKey = new Map(forwardOrders.map(row => [orderKey(row), row]));
+  const matchedOrders = [...backByKey.keys()].filter(key => forwardByKey.has(key));
+  const fillGaps = matchedOrders.map(key => {
+    const a = finite(backByKey.get(key).fillPrice);
+    const b = finite(forwardByKey.get(key).fillPrice);
+    return a != null && b != null && a !== 0 ? Math.abs(b / a - 1) : null;
+  }).filter(value => value != null);
+  const avgFillGap = fillGaps.length ? fillGaps.reduce((sum, value) => sum + value, 0) / fillGaps.length : null;
+  return {backSignals, forwardSignals, missingForward, unexpectedForward, matched, totalKeys, matchedOrders: fillGaps.length, avgFillGap};
+}
+
+function spreadStats(snapshots) {
+  const values = snapshots.map(row => {
+    const bid = finite(row && row.bid);
+    const ask = finite(row && row.ask);
+    if (bid == null || ask == null || bid <= 0 || ask < bid) return null;
+    return (ask - bid) / ((ask + bid) / 2) * 100;
+  }).filter(value => value != null).sort((a, b) => a - b);
+  if (!values.length) return null;
+  const mid = Math.floor(values.length / 2);
+  return {median: values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2, count: values.length};
+}
+
+function slippageStats(orders) {
+  const values = orders.map(row => {
+    const quantity = finite(row && (row.quantity == null ? row.qty : row.quantity));
+    const price = finite(row && row.signalPrice);
+    const cost = finite(row && row.slippageCost);
+    return quantity == null || price == null || cost == null || quantity <= 0 || price <= 0
+      ? null
+      : cost / (quantity * price) * 100;
+  }).filter(value => value != null).sort((a, b) => a - b);
+  if (!values.length) return null;
+  const mid = Math.floor(values.length / 2);
+  return {median: values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2, count: values.length};
+}
+
+function uptimeStats(forward, timeframeMinutes) {
+  const scheduled = forward.scheduledCandles;
+  const calls = new Map();
+  for (const call of forward.calls) {
+    const key = timeValue(call && call.candleTime);
+    if (key != null) {
+      if (!calls.has(key)) calls.set(key, []);
+      calls.get(key).push(call);
+    }
+  }
+  let onTime = 0;
+  let validScheduled = 0;
+  for (const candle of scheduled) {
+    const candleTime = timeValue(candle && (candle.candleTime || candle.time));
+    if (candleTime == null) continue;
+    validScheduled++;
+    const closesAt = timeValue(candle.closesAt) || candleTime + Math.max(1, Number(timeframeMinutes) || 60) * 60000;
+    const candleCalls = calls.get(candleTime) || [];
+    if (candleCalls.some(call => {
+      const processedAt = timeValue(call.processedAt || call.calledAt || call.time);
+      const ok = call.processed === true || ['processed', 'ok', 'success'].includes(String(call.status || '').toLowerCase());
+      return ok && processedAt != null && processedAt <= closesAt;
+    })) onTime++;
+  }
+  return {scheduled: validScheduled, onTime, rate: validScheduled ? onTime / validScheduled : null};
+}
+
+function delayStats(calls) {
+  const delays = calls.map(call => {
+    const scheduled = timeValue(call && (call.scheduledAt || call.scheduledTime));
+    const actual = timeValue(call && (call.processedAt || call.calledAt || call.time));
+    return scheduled == null || actual == null ? null : Math.max(0, actual - scheduled) / 60000;
+  }).filter(value => value != null);
+  return delays.length ? delays.reduce((sum, value) => sum + value, 0) / delays.length : null;
+}
+
+function drawChart(backtestSeries, backBenchmark, forwardSeries, forwardBenchmark, capital) {
+  const all = [...backtestSeries, ...backBenchmark, ...forwardSeries, ...forwardBenchmark].map(point => point.value).filter(Number.isFinite);
+  if (!all.length) return '<div class="empty">Tidak ada titik ekuitas atau benchmark yang valid.</div>';
+  const min = Math.min(...all), max = Math.max(...all);
+  const range = max - min || Math.abs(max) * .1 || 1;
+  const width = 900, height = 220, pad = 28;
+  const allTimes = [...backtestSeries, ...backBenchmark, ...forwardSeries, ...forwardBenchmark].map(point => point.time);
+  const firstTime = Math.min(...allTimes), lastTime = Math.max(...allTimes);
+  const path = series => {
+    if (!series.length) return '';
+    return series.map((point, index) => {
+      const x = pad + (lastTime === firstTime ? 0 : (point.time - firstTime) * (width - 2 * pad) / (lastTime - firstTime));
+      const y = height - pad - (point.value - min) * (height - 2 * pad) / range;
+      return `${index ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  };
+  const line = (series, color, dash = '') => series.length ? `<path d="${path(series)}" fill="none" stroke="${color}" stroke-width="2" ${dash ? `stroke-dasharray="${dash}"` : ''}/>` : '';
+  return `<div class="legend"><span><i style="background:#00e676"></i>Backtest</span><span><i style="background:#22d3ee"></i>Buy &amp; hold BTC/IDR</span><span><i style="background:#ffd166"></i>Forward test</span></div>
+  <svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Kurva ekuitas backtest, forward test, dan benchmark">
+  <line x1="${pad}" y1="${pad}" x2="${width-pad}" y2="${pad}" stroke="#243047"/><line x1="${pad}" y1="${height/2}" x2="${width-pad}" y2="${height/2}" stroke="#243047"/><line x1="${pad}" y1="${height-pad}" x2="${width-pad}" y2="${height-pad}" stroke="#243047"/>
+  ${line(backtestSeries, '#00e676')}${line(backBenchmark, '#22d3ee', '5 4')}${line(forwardSeries, '#ffd166')}</svg>
+  <p class="muted small">Skala Rupiah nominal. Forward test dan benchmark hanya ditampilkan pada titik yang tersedia; seri tidak diisi dengan angka buatan.</p>`;
+}
+
+function renderIdentity(meta, btSeries, fwSeries) {
+  const pairs = meta.pairs.map(esc).join(', ') || '—';
+  const years = yearsBetween(btSeries);
+  const durationText = years == null ? 'periode backtest belum dapat dihitung' : `${fmtNumber(years, 2)} tahun`;
+  const forwardStart = timeValue(meta.forwardStart);
+  const forwardEnd = timeValue(meta.forwardEnd);
+  const forwardDays = forwardStart == null || forwardEnd == null ? null : (forwardEnd - forwardStart) / 86400000;
+  const enoughHistory = years != null && years >= 3;
+  $('#identity').innerHTML = `<p><b>${esc(meta.strategyName || 'Nama strategi belum dicantumkan')}</b> · Universe (${meta.pairs.length}): ${pairs}</p>
+  <p>Freeze: ${esc(meta.freezeAt || '—')} · Backtest: ${esc(meta.backtestStart || '—')} – ${esc(meta.backtestEnd || '—')} (${durationText}${enoughHistory ? ', memenuhi minimum 3 tahun' : ', belum memenuhi minimum 3 tahun'}) · Forward: ${esc(meta.forwardStart || '—')} – ${esc(meta.forwardEnd || '—')} (${forwardDays == null ? 'durasi belum diketahui' : `${fmtNumber(forwardDays, 1)} hari`}; ${fwSeries.length} titik ekuitas).</p>`;
+}
+
+function render() {
+  if (!dataset) return;
+  const meta = dataset.metadata;
+  const capital = finite(meta.initialCapital);
+  const bt = dataset.backtest;
+  const fw = dataset.forward;
+  const backtestSeries = sortedSeries(bt.equity, equityNumber, 'backtest.equity');
+  const forwardSeries = sortedSeries(fw.equity, equityNumber, 'forward.equity');
+  const backBenchmark = periodSeries(bt.benchmark, meta.backtestStart, meta.backtestEnd, row => finite(row.price == null ? row.close : row.price), 'backtest.benchmark');
+  const fwBenchmark = periodSeries(fw.benchmark, meta.forwardStart, meta.forwardEnd, row => finite(row.price == null ? row.close : row.price), 'forward.benchmark');
+  const btWindow = periodSeries(bt.equity, meta.forwardStart, meta.forwardEnd, equityNumber, 'backtest.equity untuk jendela forward');
+  const fwWindow = periodSeries(fw.equity, meta.forwardStart, meta.forwardEnd, equityNumber, 'forward.equity untuk jendela forward');
+  const btTrades = tradeMetrics(bt.orders, 'backtest.orders');
+  const fwTrades = tradeMetrics(fw.orders, 'forward.orders');
+  renderIdentity(meta, backtestSeries, forwardSeries);
+
+  const backTotal = returnTotal(backtestSeries);
+  const backCagr = cagr(backtestSeries);
+  const backMdd = drawdown(backtestSeries);
+  const backBuyHold = benchmarkReturn(backBenchmark, capital);
+  const forwardTotal = returnTotal(forwardSeries);
+  const forwardMdd = drawdown(forwardSeries);
+  const forwardBuyHold = benchmarkReturn(fwBenchmark, capital);
+  renderMetricSet('#backtestMetrics', [
+    metricCard('Return total', fmtPct(backTotal), `${backtestSeries.length} titik ekuitas`),
+    metricCard('CAGR', fmtPct(backCagr), 'Ditampilkan hanya untuk backtest historis'),
+    metricCard('Maximum drawdown', fmtPct(backMdd), 'Dihitung dari puncak-ke-lembah ekuitas'),
+    metricCard('Buy & hold BTC/IDR', fmtPct(capital ? backBuyHold / capital : null), `${backBenchmark.length} titik harga benchmark`),
+    metricCard('Profit factor', Number.isFinite(btTrades.profitFactor) ? fmtNumber(btTrades.profitFactor, 3) : btTrades.profitFactor === Infinity ? '∞' : '—', `${btTrades.complete}/${btTrades.closed} trade tertutup lengkap`),
+    metricCard('Win rate', fmtPct(btTrades.winRate), `${btTrades.complete} trade dengan data fee lengkap`),
+    metricCard('Rata-rata profit trade', fmtMoney(btTrades.avgWin), 'Net berdasarkan harga fill dan fee'),
+    metricCard('Rata-rata loss trade', fmtMoney(btTrades.avgLoss), 'Net berdasarkan harga fill dan fee'),
+    metricCard('Trade tertutup', fmtNumber(btTrades.closed, 0), 'Direkonstruksi FIFO dari order filled')
+  ]);
+  renderMetricSet('#forwardMetrics', [
+    metricCard('Return total', fmtPct(forwardTotal), `${forwardSeries.length} titik ekuitas`),
+    metricCard('Maximum drawdown', fmtPct(forwardMdd), 'Dihitung dari puncak-ke-lembah ekuitas'),
+    metricCard('Buy & hold BTC/IDR', fmtPct(capital ? forwardBuyHold / capital : null), `${fwBenchmark.length} titik harga benchmark`),
+    metricCard('Profit factor', Number.isFinite(fwTrades.profitFactor) ? fmtNumber(fwTrades.profitFactor, 3) : fwTrades.profitFactor === Infinity ? '∞' : '—', `${fwTrades.complete}/${fwTrades.closed} trade tertutup lengkap`),
+    metricCard('Win rate', fmtPct(fwTrades.winRate), `${fwTrades.complete} trade dengan data fee lengkap`),
+    metricCard('Rata-rata profit trade', fmtMoney(fwTrades.avgWin), 'Net berdasarkan harga fill dan fee'),
+    metricCard('Rata-rata loss trade', fmtMoney(fwTrades.avgLoss), 'Net berdasarkan harga fill dan fee'),
+    metricCard('Trade tertutup', fmtNumber(fwTrades.closed, 0), 'Direkonstruksi FIFO dari order filled')
+  ]);
+  $('#equityChart').outerHTML = `<div id="equityChart">${drawChart(backtestSeries, benchmarkEquity(backBenchmark, capital), forwardSeries, benchmarkEquity(fwBenchmark, capital), capital)}</div>`;
+
+  const costCard = (title, trades) => metricCard(title, fmtPct(trades.costShare), trades.costsComplete ? `${fmtMoney(trades.costs)} fee + spread + slippage ÷ ${fmtMoney(trades.grossProfit)} laba kotor` : 'Perlu fee, spreadCost, dan slippageCost pada setiap trade');
+  renderMetricSet('#executionMetrics', [
+    costCard('Porsi biaya backtest', btTrades),
+    costCard('Porsi biaya forward', fwTrades),
+    metricCard('Order backtest', fmtNumber(bt.orders.length, 0), 'Semua status'),
+    metricCard('Order forward', fmtNumber(fw.orders.length, 0), 'Semua status')
+  ]);
+
+  const comparison = compareSignalsAndOrders();
+  const signalRate = comparison.totalKeys ? comparison.matched / comparison.totalKeys : null;
+  const btWindowReturn = returnTotal(btWindow);
+  const fwWindowReturn = returnTotal(fwWindow);
+  const uptime = uptimeStats(fw, meta.timeframeMinutes);
+  const spread = spreadStats(fw.snapshots);
+  const slippage = slippageStats(fw.orders.filter(row => row && String(row.status || '').toLowerCase() === 'filled'));
+  const assumedSpread = finite(meta.backtestMedianSpreadPct);
+  const assumedSlippage = finite(meta.backtestMedianSlippagePct);
+  const meanDelay = delayStats(fw.calls);
+  renderMetricSet('#comparisonMetrics', [
+    metricCard('Sinyal cocok', comparison.totalKeys ? `${fmtNumber(comparison.matched, 0)} / ${fmtNumber(comparison.totalKeys, 0)}` : '—', comparison.totalKeys ? fmtPct(signalRate) : 'Belum ada sinyal buy/sell untuk dibandingkan'),
+    metricCard('Return backtest di jendela 10 hari', fmtPct(btWindowReturn), `${btWindow.length} titik ekuitas pada rentang forward`),
+    metricCard('Return forward pada jendela yang sama', fmtPct(fwWindowReturn), `${fwWindow.length} titik ekuitas`),
+    metricCard('Gap return forward − backtest', fmtPct(btWindowReturn == null || fwWindowReturn == null ? null : fwWindowReturn - btWindowReturn), 'Selisih poin persentase'),
+    metricCard('Selisih fill rata-rata order cocok', fmtPct(comparison.avgFillGap), `${comparison.matchedOrders} pasangan order cocok`)
+  ]);
+  renderSignalDiff(comparison);
+  renderOperations(fw, uptime, spread, assumedSpread, slippage, assumedSlippage, meanDelay);
+  renderTables(fw);
+  renderRules(meta, btTrades, fwTrades, backtestSeries, forwardSeries);
+  renderReflection({comparison, btWindowReturn, fwWindowReturn, uptime, spread, assumedSpread, slippage, assumedSlippage, meanDelay});
+  renderWarnings();
+}
+
+function renderSignalDiff(comparison) {
+  const rows = [
+    ...comparison.missingForward.map(item => ({type: 'Tidak muncul di forward', ...item})),
+    ...comparison.unexpectedForward.map(item => ({type: 'Tidak ada di backtest', ...item}))
+  ];
+  if (!rows.length) {
+    $('#signalDiff').innerHTML = '<div class="empty">Tidak ditemukan perbedaan sinyal pada jendela yang dibandingkan.</div>';
+    return;
+  }
+  $('#signalDiff').innerHTML = `<table><thead><tr><th>Perbedaan</th><th>Waktu candle</th><th>Pasangan</th><th>Sisi</th><th>Jumlah</th></tr></thead><tbody>${rows.slice(0, 100).map(({type, row, count}) =>
+    `<tr><td>${esc(type)}</td><td>${esc(row.time || '—')}</td><td>${esc(row.pair || '—')}</td><td>${esc(normalizeSignalAction(row.action) || '—')}</td><td>${fmtNumber(count, 0)}</td></tr>`
+  ).join('')}</tbody></table>${rows.length > 100 ? `<p class="muted small">Menampilkan 100 dari ${rows.length} perbedaan.</p>` : ''}`;
+}
+
+function renderOperations(forward, uptime, spread, assumedSpread, slippage, assumedSlippage, meanDelay) {
+  const failedCalls = forward.calls.filter(call => ['error', 'failed'].includes(String(call.status || '').toLowerCase())).length;
+  const enabled = forward.killSwitchEvents.filter(event => event.enabled === true || String(event.enabled).toLowerCase() === 'true').length;
+  renderMetricSet('#operationsMetrics', [
+    metricCard('Uptime', fmtPct(uptime.rate), `${uptime.onTime} / ${uptime.scheduled} candle tepat waktu`),
+    metricCard('Panggilan tercatat', fmtNumber(forward.calls.length, 0), 'Dari log forward test'),
+    metricCard('Error API tercatat', fmtNumber(forward.errors.length, 0), 'Jumlah entri pada array errors'),
+    metricCard('Panggilan gagal', fmtNumber(failedCalls, 0), 'Panggilan dengan status error/failed'),
+    metricCard('Pemakaian kill switch', fmtNumber(enabled, 0), 'Event dengan enabled=true'),
+    metricCard('Rata-rata keterlambatan', meanDelay == null ? '—' : `${fmtNumber(meanDelay, 1)} menit`, 'Dihitung jika scheduledAt dan waktu panggilan tercatat'),
+    metricCard('Spread median snapshot', spread ? `${fmtNumber(spread.median, 4)}%` : '—', spread ? `${spread.count} snapshot valid` : 'Belum ada snapshot bid/ask'),
+    metricCard('Slippage median order', slippage ? `${fmtNumber(slippage.median, 4)}%` : '—', slippage ? `${slippage.count} order dengan biaya slippage` : 'Belum ada data slippage order')
+  ]);
+  $('#errorsTable').innerHTML = forward.errors.length
+    ? `<table><thead><tr><th>Waktu</th><th>Sumber</th><th>Pesan</th></tr></thead><tbody>${forward.errors.slice(-100).reverse().map(error =>
+      `<tr><td>${esc(error.time || '—')}</td><td>${esc(error.source || '—')}</td><td class="wrap">${esc(error.message || '—')}</td></tr>`
+    ).join('')}</tbody></table>`
+    : '<div class="empty">Tidak ada error pada array forward.errors.</div>';
+  const spreadNote = spread && assumedSpread != null
+    ? `Spread median forward ${fmtNumber(spread.median, 4)}% vs backtest ${fmtNumber(assumedSpread, 4)}%.`
+    : 'Spread forward/backtest belum dapat dibandingkan.';
+  const slippageNote = slippage && assumedSlippage != null
+    ? `Slippage median forward ${fmtNumber(slippage.median, 4)}% vs backtest ${fmtNumber(assumedSlippage, 4)}%.`
+    : 'Slippage forward/backtest belum dapat dibandingkan.';
+  $('#errorsTable').insertAdjacentHTML('beforeend', `<p class="muted small">${esc(`${spreadNote} ${slippageNote}`)}</p>`);
+}
+
+function renderTables(forward) {
+  const orders = forward.orders.slice().sort((a, b) => (timeValue(b.time) || 0) - (timeValue(a.time) || 0)).slice(0, 100);
+  $('#ordersTable').innerHTML = orders.length
+    ? `<table><thead><tr><th>Waktu</th><th>Pasangan</th><th>Sisi</th><th>Status</th><th>Kuantitas</th><th>Bid</th><th>Ask</th><th>Fill avg.</th><th>Fee</th><th>Spread cost</th><th>Slippage cost</th><th>Gap vs sinyal</th></tr></thead><tbody>${orders.map(order => {
+      const gap = finite(order.fillPrice) != null && finite(order.signalPrice) > 0 ? finite(order.fillPrice) / finite(order.signalPrice) - 1 : null;
+      return `<tr><td>${esc(order.time || '—')}</td><td>${esc(order.pair || '—')}</td><td>${esc(normalizeSide(order.side) || '—')}</td><td>${esc(order.status || '—')}</td><td>${esc(fmtNumber(finite(order.quantity == null ? order.qty : order.quantity), 8))}</td><td>${esc(fmtNumber(finite(order.bestBid), 8))}</td><td>${esc(fmtNumber(finite(order.bestAsk), 8))}</td><td>${esc(fmtNumber(finite(order.fillPrice), 8))}</td><td>${esc(fmtMoney(finite(order.fee)))}</td><td>${esc(fmtMoney(finite(order.spreadCost)))}</td><td>${esc(fmtMoney(finite(order.slippageCost)))}</td><td>${esc(fmtPct(gap, 4))}</td></tr>`;
+    }).join('')}</tbody></table>${forward.orders.length > 100 ? `<p class="muted small">Menampilkan 100 dari ${forward.orders.length} order.</p>` : ''}`
+    : '<div class="empty">Belum ada order forward tercatat. Kondisi ini sah bila tidak ada sinyal; log sinyal dan panggilan tetap diperlukan.</div>';
+}
+
+function renderRules(meta, btTrades, fwTrades, btSeries, fwSeries) {
+  const feeRate = finite(meta.takerFeeRate);
+  const apiFee = finite(meta.feeApiTakerRate);
+  const pageFee = finite(meta.feePageTakerRate);
+  const feeApiUrl = safeHttpUrl(meta.feeApiUrl);
+  const feePageUrl = safeHttpUrl(meta.feePageUrl);
+  const rows = [
+    ['Strategi', meta.strategyName || '—'],
+    ['Timeframe', finite(meta.timeframeMinutes) == null ? '—' : `${fmtNumber(Number(meta.timeframeMinutes), 0)} menit`],
+    ['Universe', meta.pairs.join(', ') || '—'],
+    ['Kriteria pemilihan pasangan', meta.pairSelectionCriteria || 'Belum dicantumkan'],
+    ['Data historis Indodax', `${safeHttpUrl(meta.historicalDataSourceUrl) || 'Sumber URL belum dicantumkan'} · ${meta.historicalDataAccessDate || 'tanggal akses belum dicantumkan'}`],
+    ['Snapshot spread/slippage sebelum freeze', `${meta.backtestSnapshotCount == null ? '—' : meta.backtestSnapshotCount} snapshot`],
+    ['Aturan masuk', meta.entryRule || 'Belum dicantumkan'],
+    ['Aturan keluar', meta.exitRule || 'Belum dicantumkan'],
+    ['Sizing posisi', meta.sizingRule || 'Belum dicantumkan'],
+    ['Parameter beku', meta.parameters && Object.keys(meta.parameters).length ? JSON.stringify(meta.parameters) : 'Belum dicantumkan'],
+    ['Perubahan dari strategi UTS', meta.changesFromUts || 'Belum dicantumkan'],
+    ['Versi/kode fungsi sinyal bersama', meta.signalCodeRef || 'Belum dicantumkan'],
+    ['Modal virtual awal', fmtMoney(finite(meta.initialCapital))],
+    ['Freeze date', meta.freezeAt || '—'],
+    ['Maksimum posisi / ukuran posisi', `${meta.maxOpenPositions == null ? '—' : meta.maxOpenPositions} / ${meta.maxPositionPct == null ? '—' : fmtPct(finite(meta.maxPositionPct))}`],
+    ['Daily loss limit', meta.dailyLossLimitPct == null ? '—' : fmtPct(finite(meta.dailyLossLimitPct))],
+    ['Fee taker di /api/pairs', `${feeApiUrl || 'URL belum dicantumkan'} · ${fmtPct(finite(meta.feeApiTakerRate))}`],
+    ['Fee taker di halaman biaya resmi', `${feePageUrl || 'URL belum dicantumkan'} · ${fmtPct(finite(meta.feePageTakerRate))}`],
+    ['Fee yang dipakai / tanggal akses', `${feeRate == null ? '—' : fmtPct(feeRate)} · ${meta.feeAccessDate || 'tanggal akses belum dicantumkan'}`],
+    ['Minimum order', meta.minimumOrderIdr == null ? '—' : fmtMoney(finite(meta.minimumOrderIdr))],
+    ['Valuasi ekuitas', meta.equityValuation || 'Wajib memakai best bid untuk posisi terbuka; equity harian setelah 00.00 WIB'],
+    ['Spread median backtest', meta.backtestMedianSpreadPct == null ? '—' : `${fmtNumber(finite(meta.backtestMedianSpreadPct), 4)}%`],
+    ['Slippage median backtest', meta.backtestMedianSlippagePct == null ? '—' : `${fmtNumber(finite(meta.backtestMedianSlippagePct), 4)}%`],
+    ['Pemeriksaan durasi backtest', yearsBetween(btSeries) != null && yearsBetween(btSeries) >= 3 ? 'Memenuhi ≥ 3 tahun' : 'Belum terbukti ≥ 3 tahun'],
+    ['Titik forward / trade lengkap', `${fwSeries.length} / ${fwTrades.complete} · ${btTrades.complete} trade backtest lengkap`]
+  ];
+  $('#strategyDetails').innerHTML = `<div class="table-wrap"><table><tbody>${rows.map(([key, value]) => `<tr><th>${esc(key)}</th><td class="wrap">${esc(value)}</td></tr>`).join('')}</tbody></table></div>`;
+  const issues = [];
+  if (!safeHttpUrl(meta.historicalDataSourceUrl) || !meta.historicalDataAccessDate) issues.push('Cantumkan URL sumber data historis Indodax dan tanggal aksesnya.');
+  if (finite(meta.backtestSnapshotCount) == null || finite(meta.backtestSnapshotCount) <= 0) issues.push('Catat jumlah snapshot order book mentah yang digunakan untuk mengukur spread/slippage backtest.');
+  if (finite(meta.backtestMedianSpreadPct) == null || finite(meta.backtestMedianSlippagePct) == null) issues.push('Cantumkan median spread dan slippage terukur dari snapshot sebelum freeze.');
+  if (!feeApiUrl || !feePageUrl || !meta.feeAccessDate || apiFee == null || pageFee == null) issues.push('Cantumkan kedua URL resmi, tarif /api/pairs, tarif halaman rincian biaya, dan tanggal akses.');
+  const publishedFees = [apiFee, pageFee].filter(value => value != null);
+  const highestPublishedFee = publishedFees.length ? Math.max(...publishedFees) : null;
+  if (publishedFees.some(value => value < 0)) issues.push('Tarif fee sumber resmi tidak boleh negatif.');
+  if (finite(meta.minimumOrderIdr) == null) issues.push('Cantumkan minimum order yang dipakai; panduan meminta batas Pro Rp25.000 kecuali sumber resmi menyatakan lain.');
+  else if (finite(meta.minimumOrderIdr) < 25000) issues.push('Minimum order di bawah Rp25.000; pastikan ada sumber resmi yang mengizinkan batas lebih rendah.');
+  if (feeRate == null || highestPublishedFee == null || feeRate < highestPublishedFee) issues.push('Fee yang dipakai harus paling sedikit sebesar tarif resmi tertinggi yang tercantum.');
+  if (finite(meta.initialCapital) !== 100000000) issues.push('Modal awal paper trading harus Rp100.000.000 sesuai panduan.');
+  if (meta.maxOpenPositions == null || finite(meta.maxPositionPct) == null || finite(meta.dailyLossLimitPct) == null) issues.push('Cantumkan batas posisi, ukuran maksimum posisi, dan daily loss limit.');
+  if (yearsBetween(btSeries) == null || yearsBetween(btSeries) < 3) issues.push('Rentang equity backtest yang tersedia belum membuktikan backtest minimal 3 tahun.');
+  if (!meta.pairSelectionCriteria) issues.push('Jelaskan kriteria likuiditas universe pada awal periode backtest untuk mengurangi survivorship bias.');
+  if (!meta.entryRule || !meta.exitRule || !meta.sizingRule || !meta.parameters || !Object.keys(meta.parameters).length) issues.push('Lengkapi aturan masuk/keluar, sizing, dan parameter strategi yang dibekukan.');
+  if (!meta.signalCodeRef) issues.push('Cantumkan versi/commit fungsi sinyal yang dipakai bersama oleh backtest dan bot.');
+  if (!dataset.backtest.signals.length || !dataset.forward.signals.length) issues.push('Log sinyal kosong pada salah satu periode; kecocokan strategi candle demi candle belum dapat dibuktikan, termasuk saat tidak ada trade.');
+  if (uptimeStats(dataset.forward, meta.timeframeMinutes).scheduled === 0) issues.push('Isi scheduledCandles agar uptime dapat dihitung dari jumlah candle yang dijadwalkan.');
+  const fwWindow = periodSeries(dataset.forward.equity, meta.forwardStart, meta.forwardEnd, equityNumber, 'forward.equity');
+  const forwardStart = timeValue(meta.forwardStart);
+  const forwardEnd = timeValue(meta.forwardEnd);
+  const forwardDays = forwardStart == null || forwardEnd == null ? null : (forwardEnd - forwardStart) / 86400000;
+  if (forwardDays == null || forwardDays < 9.5 || forwardDays > 10.5) issues.push('Periode forward pada metadata bukan 10 hari penuh; periksa freeze/forward timestamps.');
+  if (fwWindow.length < 2) issues.push('Forward test belum menyediakan minimal dua titik equity; return dan MDD belum dapat dibandingkan.');
+  $('#qualityChecks').innerHTML = issues.length ? `<ul class="warnings">${issues.map(issue => `<li>${esc(issue)}</li>`).join('')}</ul>` : '<p class="up">Metadata wajib dan titik data minimum terdeteksi. Audit log dan sumber asli tetap perlu diverifikasi.</p>';
+}
+
+function renderReflection(values) {
+  const {comparison, btWindowReturn, fwWindowReturn, uptime, spread, assumedSpread, slippage, assumedSlippage, meanDelay} = values;
+  const gap = btWindowReturn == null || fwWindowReturn == null ? null : fwWindowReturn - btWindowReturn;
+  const mismatch = comparison.totalKeys - comparison.matched;
+  const spreadText = spread && assumedSpread != null
+    ? `Median spread snapshot forward ${fmtNumber(spread.median, 4)}% dibanding asumsi backtest ${fmtNumber(assumedSpread, 4)}% (${fmtNumber(spread.median - assumedSpread, 4)} poin persentase).`
+    : 'Belum cukup data untuk membandingkan spread terukur dengan asumsi spread backtest.';
+  const slippageText = slippage && assumedSlippage != null
+    ? `Median slippage order forward ${fmtNumber(slippage.median, 4)}% dibanding asumsi backtest ${fmtNumber(assumedSlippage, 4)}% (${fmtNumber(slippage.median - assumedSlippage, 4)} poin persentase).`
+    : 'Belum cukup data untuk membandingkan slippage terukur dengan asumsi backtest.';
+  $('#reflectionContent').innerHTML = `<ul>
+    <li>Return pada jendela yang sama: backtest ${fmtPct(btWindowReturn)}; forward ${fmtPct(fwWindowReturn)}; gap forward − backtest ${fmtPct(gap)}.</li>
+    <li>Kecocokan sinyal: ${comparison.matched} cocok dari ${comparison.totalKeys} aksi (duplikat ikut dihitung); ${mismatch} aksi berbeda/hilang. Selisih fill absolut rata-rata pada ${comparison.matchedOrders} order cocok: ${fmtPct(comparison.avgFillGap, 4)}.</li>
+    <li>${esc(spreadText)} ${esc(slippageText)}</li>
+    <li>Uptime: ${uptime.onTime}/${uptime.scheduled} candle tepat waktu (${fmtPct(uptime.rate)}); keterlambatan rata-rata panggilan ${meanDelay == null ? 'belum tersedia' : `${fmtNumber(meanDelay, 1)} menit`}.</li>
+    <li>Angka di atas mendeskripsikan selisih dari log, bukan bukti sebab-akibat. Jelaskan dampak fee, bid/ask, slippage, keterlambatan, candle terlewat, serta perubahan volatilitas berdasarkan baris log terkait; jangan mengatribusikan penyebab yang tidak tercatat.</li>
+  </ul>`;
+}
+
+function renderWarnings() {
+  const unique = [...new Set(warnings)];
+  $('#dataWarnings').innerHTML = unique.length
+    ? `<h3>Peringatan kualitas data</h3><ul class="warnings">${unique.slice(0, 40).map(item => `<li>${esc(item)}</li>`).join('')}</ul>${unique.length > 40 ? `<p class="muted small">Ada ${unique.length - 40} peringatan tambahan.</p>` : ''}`
+    : '<p class="up small">Tidak ditemukan field numerik/tanggal yang invalid pada perhitungan ini.</p>';
+}
+
+function templateData() {
+  return {
+    schemaVersion: 1,
+    metadata: {
+      strategyName: '', timeframeMinutes: 60, pairs: [], pairSelectionCriteria: '',
+      entryRule: '', exitRule: '', sizingRule: '', parameters: {}, changesFromUts: '', signalCodeRef: '',
+      initialCapital: null, freezeAt: '', backtestStart: '', backtestEnd: '',
+      historicalDataSourceUrl: '',
+      historicalDataAccessDate: '', backtestSnapshotCount: null, backtestMedianSlippagePct: null,
+      forwardStart: '', forwardEnd: '', takerFeeRate: null, feeApiUrl: '',
+      feeApiTakerRate: null, feePageUrl: '', feePageTakerRate: null,
+      feeAccessDate: '', minimumOrderIdr: null, backtestMedianSpreadPct: null,
+      maxOpenPositions: null, maxPositionPct: null, dailyLossLimitPct: null,
+      equityValuation: 'best bid; daily sample after 00:00 WIB'
+    },
+    backtest: {equity: [], benchmark: [], signals: [], orders: []},
+    forward: {scheduledCandles: [], calls: [], equity: [], benchmark: [], signals: [], orders: [], errors: [], snapshots: [], killSwitchEvents: []}
+  };
+}
+
+function resetDashboard() {
+  $('#identity').textContent = 'Muat JSON untuk melihat periode, strategi, universe, dan status kecukupan data.';
+  $('#backtestMetrics').innerHTML = '<div class="empty">Menunggu log backtest.</div>';
+  $('#forwardMetrics').innerHTML = '<div class="empty">Menunggu log forward test 10 hari.</div>';
+  $('#equityChart').innerHTML = 'Kurva akan dihitung dari log ekuitas dan harga BTC/IDR.';
+  $('#executionMetrics').innerHTML = '<div class="empty">Menunggu log order simulasi.</div>';
+  $('#comparisonMetrics').innerHTML = '<div class="empty">Muat data untuk menghitung kecocokan.</div>';
+  $('#signalDiff').innerHTML = '<div class="empty">Belum ada perbandingan.</div>';
+  $('#operationsMetrics').innerHTML = '<div class="empty">Muat log panggilan, error, snapshot, dan kill switch.</div>';
+  $('#errorsTable').innerHTML = '<div class="empty">Belum ada log error.</div>';
+  $('#ordersTable').innerHTML = '<div class="empty">Belum ada log order.</div>';
+  $('#strategyDetails').textContent = 'Muat JSON untuk menampilkan metadata strategi dan rincian sumber fee.';
+  $('#qualityChecks').textContent = 'Belum ada data untuk diperiksa.';
+  $('#reflectionContent').textContent = 'Refleksi numerik akan dibuat dari log yang valid.';
+  $('#dataWarnings').textContent = '';
+}
+
+$('#fileInput').addEventListener('change', async event => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const status = $('#loadStatus');
+  status.classList.remove('error');
+  status.textContent = `Membaca ${file.name}…`;
+  try {
+    const parsed = JSON.parse(await file.text());
+    dataset = validateData(parsed);
+    render();
+    status.textContent = `Log dimuat: ${file.name}`;
+  } catch (error) {
+    dataset = null;
+    resetDashboard();
+    status.classList.add('error');
+    status.textContent = error instanceof Error ? error.message : 'Log JSON tidak dapat dibaca.';
+  }
+});
+
+$('#templateButton').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(templateData(), null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'template-log-indodax.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+</script>
+</body>
+</html>
