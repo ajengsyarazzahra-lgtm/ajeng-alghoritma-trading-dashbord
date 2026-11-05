@@ -1,0 +1,35 @@
+name: Indodax dry-run tick
+
+on:
+  schedule:
+    - cron: '7 0 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: indodax-dry-run-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call protected Vercel tick endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          TICK_URL: ${{ vars.VERCEL_TICK_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "GitHub Actions secret CRON_SECRET belum disetel." >&2
+            exit 1
+          fi
+          if [ -z "$TICK_URL" ]; then
+            echo "GitHub Actions variable VERCEL_TICK_URL belum disetel." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --connect-timeout 10 --max-time 180 --retry 2 --retry-delay 5 \
+            -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Accept: application/json" \
+            "$TICK_URL"
