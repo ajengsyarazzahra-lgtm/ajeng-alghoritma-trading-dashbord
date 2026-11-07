@@ -22,6 +22,7 @@ button,input{font:inherit;color:inherit}
 .live-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 15px;margin-bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:6px}
 .live-banner strong{font-size:15px}.live-banner .live-meta{color:var(--mut);font-size:12px}
 .live-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.live-controls input[type=password]{min-width:min(260px,100%);padding:7px;background:var(--card2);border:1px solid var(--line);border-radius:4px}
 .live-panel{margin-bottom:14px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:6px}
 .live-panel h2{margin:0 0 10px;font-size:16px}
 .live-error{color:var(--dn)}
@@ -76,7 +77,7 @@ footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);
 </header>
 <main class="wrap">
   <div class="live-banner">
-    <strong id="liveStatus">DASHBOARD ONLINE: menghubungkan ke API…</strong>
+    <strong id="liveStatus">MENGHUBUNGKAN KE BOT…</strong>
     <span id="liveUpdated" class="live-meta">Menunggu respons server</span>
   </div>
   <div class="live-controls">
@@ -89,6 +90,15 @@ footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);
     <div id="liveMetrics" class="grid"><div class="empty">Mengambil state dan log dari storage…</div></div>
     <h3>Status operasional</h3>
     <div id="liveOps" class="grid"><div class="empty">Menunggu data.</div></div>
+    <h3>Kill switch manual</h3>
+    <div class="live-controls">
+      <label for="controlSecret">CONTROL_SECRET</label>
+      <input id="controlSecret" type="password" autocomplete="off" spellcheck="false" aria-describedby="controlHelp">
+      <button id="killSwitchOn" class="btn" type="button">Aktifkan — blokir entry</button>
+      <button id="killSwitchOff" class="btn" type="button">Nonaktifkan manual</button>
+      <span id="controlStatus" class="live-meta" role="status" aria-live="polite">Secret hanya dikirim ke endpoint kontrol dan tidak disimpan di browser.</span>
+    </div>
+    <p id="controlHelp" class="muted small">Environment PROCESS_KILL_SWITCH=true tetap memaksa kill switch aktif meskipun status manual dimatikan.</p>
   </section>
   <section class="live-panel">
     <h2>Log transaksi dan sinyal terbaru</h2>
@@ -97,13 +107,14 @@ footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);
       <div><h3>Signal per candle</h3><div id="liveSignals" class="table-wrap"><div class="empty">Menunggu data.</div></div></div>
     </div>
     <h3>Log error terbaru</h3><div id="liveErrors" class="table-wrap"><div class="empty">Menunggu data.</div></div>
+    <h3>Snapshot order book mentah terbaru</h3><div id="liveSnapshots" class="table-wrap"><div class="empty">Menunggu data.</div></div>
   </section>
   <div class="notice"><strong>Mode live membaca state dan log bot dari storage Vercel.</strong> Bagian bawah tetap menyediakan analisis offline untuk file JSON, tanpa mengunggah file ke server.</div>
   <div class="toolbar">
     <label for="fileInput"><b>Muat log JSON</b></label>
     <input id="fileInput" type="file" accept=".json,application/json">
     <button id="templateButton" type="button">Unduh template skema log</button>
-    <span class="hint">Offline · file diproses lokal di peramban dan tidak diunggah</span>
+    <span class="hint">UAS JSON atau ekspor dashboard Vercel · diproses lokal dan tidak diunggah</span>
     <span id="loadStatus" class="status" role="status" aria-live="polite">Belum ada file dimuat</span>
   </div>
   <nav class="nav" aria-label="Navigasi dashboard">
@@ -133,6 +144,7 @@ footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);
     <div id="operationsMetrics" class="grid"><div class="empty">Muat log panggilan, error, snapshot, dan kill switch.</div></div>
     <h3>Error API</h3><div id="errorsTable" class="table-wrap"><div class="empty">Belum ada log error.</div></div>
     <h3>Order simulasi terbaru</h3><div id="ordersTable" class="table-wrap"><div class="empty">Belum ada log order.</div></div>
+    <h3>Snapshot order book mentah</h3><div id="snapshotsTable" class="table-wrap"><div class="empty">Belum ada snapshot order book.</div></div>
   </section>
   <section class="section" id="rules">
     <h2>Aturan strategi, eksekusi, dan sumber</h2>
@@ -206,7 +218,7 @@ footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);
     "killSwitchEvents": [{"time":"", "enabled":true, "reason":""}]
   }
 }</pre>
-    <p class="muted small">Order berstatus filled perlu menyimpan kuantitas, harga sinyal, harga fill, fee, biaya spread, dan biaya slippage. <code>equity</code> adalah log ekuitas setelah posisi terbuka dinilai pada best bid; benchmark berisi harga BTC/IDR pada waktu yang sama. Candle yang dijadwalkan harus dicantumkan agar uptime dapat dihitung. Data yang tidak tersedia ditampilkan sebagai “—”, tidak diasumsikan nol.</p>
+    <p class="muted small">Order berstatus filled perlu menyimpan kuantitas, harga sinyal, harga fill, fee, biaya spread, dan biaya slippage. <code>equity</code> adalah log ekuitas setelah posisi terbuka dinilai pada best bid; benchmark berisi harga BTC/IDR pada waktu yang sama. Untuk uptime, <code>closesAt</code> adalah batas waktu (penutupan candle berikutnya); candle terjadwal dihitung hanya setelah batasnya lewat. Data yang tidak tersedia ditampilkan sebagai “—”, tidak diasumsikan nol.</p>
     </details>
   </section>
 </main>
@@ -304,6 +316,108 @@ function validateData(raw) {
   const pairs = Array.isArray(raw.metadata.pairs) ? raw.metadata.pairs : [];
   if (pairs.length < 3 || pairs.length > 10) warnings.push(`Universe berisi ${pairs.length} pasangan; ketentuan tugas adalah 3–10 pasangan IDR.`);
   return {...raw, backtest, forward, metadata: {...raw.metadata, pairs}};
+}
+
+function makeScheduledCandles(start, end, timeframeMinutes) {
+  const startTime = timeValue(start);
+  const endTime = timeValue(end);
+  const interval = Number(timeframeMinutes) * 60 * 1000;
+  if (startTime == null || endTime == null || !Number.isFinite(interval) || interval <= 0) return [];
+  const rows = [];
+  let candleTime = Math.ceil(startTime / interval) * interval;
+  while (candleTime + interval <= endTime) {
+    rows.push({
+      candleTime: new Date(candleTime).toISOString(),
+      closesAt: new Date(candleTime + interval * 2).toISOString()
+    });
+    candleTime += interval;
+  }
+  return rows;
+}
+
+function normalizeDashboardExport(raw) {
+  if (Number(raw && raw.schemaVersion) === 1) return validateData(raw);
+  if (!raw || raw.ok !== true || !raw.rules || !raw.state || !raw.logs) {
+    throw new Error('JSON harus berupa skema UAS v1 atau ekspor dashboard Vercel.');
+  }
+  const rules = raw.rules;
+  const logs = raw.logs;
+  const start = rules.forwardStart || rules.freezeAt;
+  const snapshotTime = raw.updatedAt || raw.state.lastSuccessAt;
+  const startMs = timeValue(start);
+  const snapshotMs = timeValue(snapshotTime);
+  if (startMs == null || snapshotMs == null) {
+    throw new Error('Ekspor dashboard tidak memiliki waktu forwardStart/freezeAt atau updatedAt yang valid.');
+  }
+  const plannedEnd = startMs + 10 * 24 * 60 * 60 * 1000;
+  const forwardEnd = new Date(Math.min(snapshotMs, plannedEnd)).toISOString();
+  const pairs = Array.isArray(raw.pairs) ? raw.pairs : [];
+  const signals = Array.isArray(logs.signals) ? logs.signals : [];
+  const metadata = {
+    strategyName: rules.strategyName || '',
+    timeframeMinutes: rules.timeframeMinutes,
+    pairs,
+    entryRule: `EMA crossover ${rules.fastEma}/${rules.slowEma}, RSI ${rules.rsiMin}–${rules.rsiMax}, close di atas EMA lambat.`,
+    exitRule: `ATR trailing stop ${rules.atrMultiple}× ATR atau EMA cepat di bawah EMA lambat.`,
+    sizingRule: `Maksimum ${fmtPct(finite(rules.maxPositionPct))} ekuitas per posisi; maksimum ${rules.maxOpenPositions} posisi.`,
+    parameters: {
+      fastEma: rules.fastEma, slowEma: rules.slowEma, rsiPeriod: rules.rsiPeriod,
+      rsiMin: rules.rsiMin, rsiMax: rules.rsiMax, atrPeriod: rules.atrPeriod,
+      atrMultiple: rules.atrMultiple, breakoutLookback: rules.breakoutLookback
+    },
+    signalCodeRef: 'Versi file sumber/commit tidak disertakan dalam ekspor.',
+    initialCapital: rules.initialCapitalIdr,
+    freezeAt: rules.freezeAt || start,
+    forwardStart: start,
+    forwardEnd,
+    takerFeeRate: rules.takerFeeRate,
+    feeApiUrl: 'https://indodax.com/api/pairs',
+    feePageUrl: 'https://help.indodax.com/rincian-biaya-transaksi',
+    minimumOrderIdr: rules.minimumOrderIdr,
+    maxOpenPositions: rules.maxOpenPositions,
+    maxPositionPct: rules.maxPositionPct,
+    dailyLossLimitPct: rules.dailyLossLimitPct,
+    equityValuation: 'best bid; daily sample setelah 00.00 WIB',
+    pairSelectionCriteria: '',
+    changesFromUts: '',
+    backtestStart: '',
+    backtestEnd: '',
+    historicalDataSourceUrl: '',
+    historicalDataAccessDate: '',
+    backtestSnapshotCount: null,
+    backtestMedianSlippagePct: null,
+    feeApiTakerRate: null,
+    feePageTakerRate: null,
+    feeAccessDate: '',
+    backtestMedianSpreadPct: null,
+    forwardOnly: true
+  };
+  const benchmark = signals
+    .filter(row => String(row.pair || '').toUpperCase() === 'BTCIDR' && finite(row.close) != null)
+    .map(row => ({time: row.candleTime || row.time, price: Number(row.close)}));
+  const snapshots = Array.isArray(logs.snapshots) ? logs.snapshots.map(row => ({
+    ...row,
+    bid: row.bid == null ? row.bestBid : row.bid,
+    ask: row.ask == null ? row.bestAsk : row.ask
+  })) : [];
+  const forward = {
+    scheduledCandles: makeScheduledCandles(start, forwardEnd, rules.timeframeMinutes),
+    calls: Array.isArray(logs.calls) ? logs.calls : [],
+    equity: Array.isArray(logs.equity) ? logs.equity : [],
+    benchmark,
+    signals: signals.map(row => ({...row, time: row.candleTime || row.time})),
+    orders: Array.isArray(logs.orders) ? logs.orders : [],
+    errors: Array.isArray(logs.errors) ? logs.errors : [],
+    snapshots,
+    killSwitchEvents: Array.isArray(logs.killSwitchEvents) ? logs.killSwitchEvents : [],
+    killSwitch: raw.killSwitch === true
+  };
+  return validateData({
+    schemaVersion: 1,
+    metadata,
+    backtest: EMPTY_PART(),
+    forward
+  });
 }
 
 function equityNumber(row) {
@@ -589,8 +703,8 @@ function compareSignalsAndOrders() {
 
 function spreadStats(snapshots) {
   const values = snapshots.map(row => {
-    const bid = finite(row && row.bid);
-    const ask = finite(row && row.ask);
+    const bid = finite(row && (row.bid == null ? row.bestBid : row.bid));
+    const ask = finite(row && (row.ask == null ? row.bestAsk : row.ask));
     if (bid == null || ask == null || bid <= 0 || ask < bid) return null;
     return (ask - bid) / ((ask + bid) / 2) * 100;
   }).filter(value => value != null).sort((a, b) => a - b);
@@ -613,8 +727,10 @@ function slippageStats(orders) {
   return {median: values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2, count: values.length};
 }
 
-function uptimeStats(forward, timeframeMinutes) {
+function uptimeStats(forward, timeframeMinutes, evaluationEnd) {
   const scheduled = forward.scheduledCandles;
+  const endTime = timeValue(evaluationEnd);
+  const intervalMs = Math.max(1, Number(timeframeMinutes) || 60) * 60000;
   const calls = new Map();
   for (const call of forward.calls) {
     const key = timeValue(call && call.candleTime);
@@ -629,7 +745,11 @@ function uptimeStats(forward, timeframeMinutes) {
     const candleTime = timeValue(candle && (candle.candleTime || candle.time));
     if (candleTime == null) continue;
     validScheduled++;
-    const closesAt = timeValue(candle.closesAt) || candleTime + Math.max(1, Number(timeframeMinutes) || 60) * 60000;
+    const closesAt = timeValue(candle.closesAt) || candleTime + intervalMs * 2;
+    if (endTime != null && closesAt > endTime) {
+      validScheduled--;
+      continue;
+    }
     const candleCalls = calls.get(candleTime) || [];
     if (candleCalls.some(call => {
       const processedAt = timeValue(call.processedAt || call.calledAt || call.time);
@@ -743,7 +863,7 @@ function render() {
   const signalRate = comparison.totalKeys ? comparison.matched / comparison.totalKeys : null;
   const btWindowReturn = returnTotal(btWindow);
   const fwWindowReturn = returnTotal(fwWindow);
-  const uptime = uptimeStats(fw, meta.timeframeMinutes);
+  const uptime = uptimeStats(fw, meta.timeframeMinutes, meta.forwardEnd);
   const spread = spreadStats(fw.snapshots);
   const slippage = slippageStats(fw.orders.filter(row => row && String(row.status || '').toLowerCase() === 'filled'));
   const assumedSpread = finite(meta.backtestMedianSpreadPct);
@@ -781,12 +901,17 @@ function renderSignalDiff(comparison) {
 function renderOperations(forward, uptime, spread, assumedSpread, slippage, assumedSlippage, meanDelay) {
   const failedCalls = forward.calls.filter(call => ['error', 'failed'].includes(String(call.status || '').toLowerCase())).length;
   const enabled = forward.killSwitchEvents.filter(event => event.enabled === true || String(event.enabled).toLowerCase() === 'true').length;
+  const latestKillEvent = forward.killSwitchEvents[0];
+  const killSwitchEnabled = typeof forward.killSwitch === 'boolean'
+    ? forward.killSwitch
+    : latestKillEvent && (latestKillEvent.enabled === true || String(latestKillEvent.enabled).toLowerCase() === 'true');
   renderMetricSet('#operationsMetrics', [
     metricCard('Uptime', fmtPct(uptime.rate), `${uptime.onTime} / ${uptime.scheduled} candle tepat waktu`),
-    metricCard('Panggilan tercatat', fmtNumber(forward.calls.length, 0), 'Dari log forward test'),
+    metricCard('Candle terjadwal terpenuhi', `${uptime.onTime} / ${uptime.scheduled}`, 'Hanya batas uptime yang sudah lewat'),
+    metricCard('Panggilan tercatat', fmtNumber(forward.calls.length, 0), `${forward.calls.filter(call => String(call.status || '').toLowerCase() === 'processed').length} memproses · ${forward.calls.filter(call => String(call.status || '').toLowerCase() === 'duplicate').length} duplikat`),
     metricCard('Error API tercatat', fmtNumber(forward.errors.length, 0), 'Jumlah entri pada array errors'),
     metricCard('Panggilan gagal', fmtNumber(failedCalls, 0), 'Panggilan dengan status error/failed'),
-    metricCard('Pemakaian kill switch', fmtNumber(enabled, 0), 'Event dengan enabled=true'),
+    metricCard('Kill switch saat ekspor', killSwitchEnabled == null ? '—' : killSwitchEnabled ? 'AKTIF' : 'NONAKTIF', `${enabled} event aktivasi tercatat`),
     metricCard('Rata-rata keterlambatan', meanDelay == null ? '—' : `${fmtNumber(meanDelay, 1)} menit`, 'Dihitung jika scheduledAt dan waktu panggilan tercatat'),
     metricCard('Spread median snapshot', spread ? `${fmtNumber(spread.median, 4)}%` : '—', spread ? `${spread.count} snapshot valid` : 'Belum ada snapshot bid/ask'),
     metricCard('Slippage median order', slippage ? `${fmtNumber(slippage.median, 4)}%` : '—', slippage ? `${slippage.count} order dengan biaya slippage` : 'Belum ada data slippage order')
@@ -813,6 +938,17 @@ function renderTables(forward) {
       return `<tr><td>${esc(order.time || '—')}</td><td>${esc(order.pair || '—')}</td><td>${esc(normalizeSide(order.side) || '—')}</td><td>${esc(order.status || '—')}</td><td>${esc(fmtNumber(finite(order.quantity == null ? order.qty : order.quantity), 8))}</td><td>${esc(fmtNumber(finite(order.bestBid), 8))}</td><td>${esc(fmtNumber(finite(order.bestAsk), 8))}</td><td>${esc(fmtNumber(finite(order.fillPrice), 8))}</td><td>${esc(fmtMoney(finite(order.fee)))}</td><td>${esc(fmtMoney(finite(order.spreadCost)))}</td><td>${esc(fmtMoney(finite(order.slippageCost)))}</td><td>${esc(fmtPct(gap, 4))}</td></tr>`;
     }).join('')}</tbody></table>${forward.orders.length > 100 ? `<p class="muted small">Menampilkan 100 dari ${forward.orders.length} order.</p>` : ''}`
     : '<div class="empty">Belum ada order forward tercatat. Kondisi ini sah bila tidak ada sinyal; log sinyal dan panggilan tetap diperlukan.</div>';
+  const snapshots = forward.snapshots.slice()
+    .sort((a, b) => (timeValue(b.time) || 0) - (timeValue(a.time) || 0)).slice(0, 50);
+  $('#snapshotsTable').innerHTML = snapshots.length
+    ? `<table><thead><tr><th>Waktu</th><th>Pair</th><th>Best bid</th><th>Best ask</th><th>Spread</th><th>Depth bid/ask</th><th>Data mentah</th></tr></thead><tbody>${snapshots.map(row => {
+      const bid = finite(row.bid == null ? row.bestBid : row.bid);
+      const ask = finite(row.ask == null ? row.bestAsk : row.ask);
+      const spread = bid > 0 && ask >= bid ? (ask - bid) / ((ask + bid) / 2) : null;
+      const raw = JSON.stringify(row.raw || row, null, 2);
+      return `<tr><td>${esc(row.time || '—')}</td><td>${esc(row.pair || '—')}</td><td>${esc(fmtNumber(bid, 8))}</td><td>${esc(fmtNumber(ask, 8))}</td><td>${esc(fmtPct(spread, 4))}</td><td>${fmtNumber((row.bids || []).length, 0)} / ${fmtNumber((row.asks || []).length, 0)}</td><td><details><summary>Lihat JSON</summary><pre>${esc(raw)}</pre></details></td></tr>`;
+    }).join('')}</tbody></table>${forward.snapshots.length > 50 ? `<p class="muted small">Menampilkan 50 dari ${forward.snapshots.length} snapshot. Ekspor lengkap memuat sisanya.</p>` : ''}`
+    : '<div class="empty">Belum ada snapshot order book.</div>';
 }
 
 function renderRules(meta, btTrades, fwTrades, btSeries, fwSeries) {
@@ -850,6 +986,7 @@ function renderRules(meta, btTrades, fwTrades, btSeries, fwSeries) {
   ];
   $('#strategyDetails').innerHTML = `<div class="table-wrap"><table><tbody>${rows.map(([key, value]) => `<tr><th>${esc(key)}</th><td class="wrap">${esc(value)}</td></tr>`).join('')}</tbody></table></div>`;
   const issues = [];
+  if (meta.forwardOnly) issues.push('Ekspor Vercel hanya berisi log forward; hasil backtest historis tidak disertakan dan tidak dihitung.');
   if (!safeHttpUrl(meta.historicalDataSourceUrl) || !meta.historicalDataAccessDate) issues.push('Cantumkan URL sumber data historis Indodax dan tanggal aksesnya.');
   if (finite(meta.backtestSnapshotCount) == null || finite(meta.backtestSnapshotCount) <= 0) issues.push('Catat jumlah snapshot order book mentah yang digunakan untuk mengukur spread/slippage backtest.');
   if (finite(meta.backtestMedianSpreadPct) == null || finite(meta.backtestMedianSlippagePct) == null) issues.push('Cantumkan median spread dan slippage terukur dari snapshot sebelum freeze.');
@@ -867,7 +1004,7 @@ function renderRules(meta, btTrades, fwTrades, btSeries, fwSeries) {
   if (!meta.entryRule || !meta.exitRule || !meta.sizingRule || !meta.parameters || !Object.keys(meta.parameters).length) issues.push('Lengkapi aturan masuk/keluar, sizing, dan parameter strategi yang dibekukan.');
   if (!meta.signalCodeRef) issues.push('Cantumkan versi/commit fungsi sinyal yang dipakai bersama oleh backtest dan bot.');
   if (!dataset.backtest.signals.length || !dataset.forward.signals.length) issues.push('Log sinyal kosong pada salah satu periode; kecocokan strategi candle demi candle belum dapat dibuktikan, termasuk saat tidak ada trade.');
-  if (uptimeStats(dataset.forward, meta.timeframeMinutes).scheduled === 0) issues.push('Isi scheduledCandles agar uptime dapat dihitung dari jumlah candle yang dijadwalkan.');
+  if (uptimeStats(dataset.forward, meta.timeframeMinutes, meta.forwardEnd).scheduled === 0) issues.push('Isi scheduledCandles agar uptime dapat dihitung dari jumlah candle yang batas waktunya sudah lewat.');
   const fwWindow = periodSeries(dataset.forward.equity, meta.forwardStart, meta.forwardEnd, equityNumber, 'forward.equity');
   const forwardStart = timeValue(meta.forwardStart);
   const forwardEnd = timeValue(meta.forwardEnd);
@@ -934,6 +1071,7 @@ function resetDashboard() {
   $('#operationsMetrics').innerHTML = '<div class="empty">Muat log panggilan, error, snapshot, dan kill switch.</div>';
   $('#errorsTable').innerHTML = '<div class="empty">Belum ada log error.</div>';
   $('#ordersTable').innerHTML = '<div class="empty">Belum ada log order.</div>';
+  $('#snapshotsTable').innerHTML = '<div class="empty">Belum ada snapshot order book.</div>';
   $('#strategyDetails').textContent = 'Muat JSON untuk menampilkan metadata strategi dan rincian sumber fee.';
   $('#qualityChecks').textContent = 'Belum ada data untuk diperiksa.';
   $('#reflectionContent').textContent = 'Refleksi numerik akan dibuat dari log yang valid.';
@@ -948,9 +1086,11 @@ $('#fileInput').addEventListener('change', async event => {
   status.textContent = `Membaca ${file.name}…`;
   try {
     const parsed = JSON.parse(await file.text());
-    dataset = validateData(parsed);
+    dataset = normalizeDashboardExport(parsed);
     render();
-    status.textContent = `Log dimuat: ${file.name}`;
+    status.textContent = dataset.metadata.forwardOnly
+      ? `Ekspor forward dimuat: ${file.name} · backtest historis belum tersedia`
+      : `Log dimuat: ${file.name}`;
   } catch (error) {
     dataset = null;
     resetDashboard();
@@ -971,7 +1111,7 @@ $('#templateButton').addEventListener('click', () => {
 </script>
 <script>
 (() => {
-  const liveIds = ['liveStatus', 'liveUpdated', 'liveMessage', 'liveMetrics', 'liveOps', 'liveOrders', 'liveSignals', 'liveErrors'];
+  const liveIds = ['liveStatus', 'liveUpdated', 'liveMessage', 'liveMetrics', 'liveOps', 'liveOrders', 'liveSignals', 'liveErrors', 'liveSnapshots', 'controlSecret', 'controlStatus', 'killSwitchOn', 'killSwitchOff'];
   const live = Object.fromEntries(liveIds.map(id => [id, document.getElementById(id)]));
   const money = value => value != null && value !== '' && Number.isFinite(Number(value))
     ? `Rp ${new Intl.NumberFormat('id-ID', {maximumFractionDigits: 0}).format(Number(value))}` : '—';
@@ -981,6 +1121,8 @@ $('#templateButton').addEventListener('click', () => {
     return Number.isFinite(time) ? new Date(time).toLocaleString('id-ID') : '—';
   };
   let livePayload = null;
+  let liveRefreshInFlight = false;
+  let liveRefreshTimer = null;
 
   function metric(label, value, note = '') {
     const card = document.createElement('div');
@@ -995,6 +1137,35 @@ $('#templateButton').addEventListener('click', () => {
     return card;
   }
 
+  function uptimeMetrics(payload) {
+    const rules = payload.rules || {};
+    const start = Date.parse(rules.forwardStart || rules.freezeAt || '');
+    const asOf = Date.parse(payload.updatedAt || '');
+    const interval = Number(rules.timeframeMinutes) * 60000;
+    if (!Number.isFinite(start) || !Number.isFinite(asOf) || !Number.isFinite(interval) || interval <= 0) {
+      return {scheduled: 0, onTime: 0, rate: null};
+    }
+    const callsByCandle = new Map();
+    for (const call of payload.logs.calls || []) {
+      const candleTime = Date.parse(call.candleTime || '');
+      if (!Number.isFinite(candleTime)) continue;
+      const processedAt = Date.parse(call.processedAt || call.time || '');
+      if (String(call.status || '').toLowerCase() !== 'processed' || !Number.isFinite(processedAt)) continue;
+      const deadline = candleTime + interval * 2;
+      if (processedAt <= deadline) callsByCandle.set(candleTime, true);
+    }
+    let scheduled = 0;
+    let onTime = 0;
+    for (let candleTime = Math.ceil(start / interval) * interval;
+      candleTime + interval <= asOf; candleTime += interval) {
+      const deadline = candleTime + interval * 2;
+      if (deadline > asOf) continue;
+      scheduled++;
+      if (callsByCandle.has(candleTime)) onTime++;
+    }
+    return {scheduled, onTime, rate: scheduled ? onTime / scheduled : null};
+  }
+
   function renderMetrics(payload) {
     const state = payload.state || {};
     const stats = state.stats || {};
@@ -1002,7 +1173,7 @@ $('#templateButton').addEventListener('click', () => {
     const wins = Number(stats.wins) || 0;
     const netWins = Number(stats.netWins) || 0;
     const netLosses = Number(stats.netLosses) || 0;
-    const profitFactor = netLosses ? netWins / netLosses : (netWins ? Infinity : 0);
+    const profitFactor = netLosses ? netWins / netLosses : (netWins ? Infinity : null);
     const costTotal = (Number(stats.fees) || 0) + (Number(stats.spreadCost) || 0) + (Number(stats.slippageCost) || 0);
     const grossProfit = Number(stats.grossProfit) || 0;
     const returnPct = state.lastEquity != null
@@ -1011,24 +1182,30 @@ $('#templateButton').addEventListener('click', () => {
       ['Total Equity', money(state.lastEquity), `Best bid · snapshot ${date(state.lastEquityAt)}`],
       ['Return', pct(returnPct), 'Dari modal virtual awal'],
       ['Max Drawdown', pct(Math.abs(Number(state.maxDrawdown) || 0) * 100), 'Sejak puncak equity tercatat'],
-      ['Win Rate', pct(totalTrades ? wins / totalTrades * 100 : 0), `${wins} menang / ${totalTrades} trade selesai`],
-      ['Profit Factor', Number.isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞', 'Laba neto menang / rugi neto'],
+      ['Win Rate', totalTrades ? pct(wins / totalTrades * 100) : '—', `${wins} menang / ${totalTrades} trade selesai`],
+      ['Profit Factor', Number.isFinite(profitFactor) ? profitFactor.toFixed(2) : profitFactor === Infinity ? '∞' : '—', 'Laba neto menang / rugi neto'],
       ['Jumlah Trade', String(totalTrades), 'Trade selesai; log sejak bot mulai'],
-      ['Biaya / laba kotor', pct(grossProfit ? costTotal / grossProfit * 100 : 0), `Fee ${money(stats.fees)} · spread ${money(stats.spreadCost)} · slippage ${money(stats.slippageCost)}`],
+      ['Biaya / laba kotor', grossProfit > 0 ? pct(costTotal / grossProfit * 100) : '—', `Fee ${money(stats.fees)} · spread ${money(stats.spreadCost)} · slippage ${money(stats.slippageCost)}`],
       ['Posisi Terbuka', String(Object.keys(state.positions || {}).length), `Maksimum ${payload.rules.maxOpenPositions}`]
     ];
     live.liveMetrics.replaceChildren(...metrics.map(([label, value, note]) => metric(label, value, note)));
 
     const calls = payload.logs.calls || [];
     const totalCalls = Number(payload.logs.callsTotal) || 0;
-    const successfulCalls = Number(stats.totalSuccessCalls) || 0;
-    const uptime = totalCalls ? successfulCalls / totalCalls * 100 : 0;
+    const recentProcessed = calls.filter(call => String(call.status || '').toLowerCase() === 'processed').length;
+    const recentDuplicates = calls.filter(call => String(call.status || '').toLowerCase() === 'duplicate').length;
+    const successfulCalls = Math.max(Number(stats.totalSuccessCalls) || 0, recentProcessed + recentDuplicates);
+    const uptime = uptimeMetrics(payload);
     const recentCall = calls[0];
     const latestError = (payload.logs.errors || [])[0];
+    const dailyEquity = (payload.logs.equity || []).find(row => row.dailySample === true);
+    const killSources = payload.killSwitchSources || {};
     const ops = [
-      ['Call berhasil / total', `${successfulCalls} / ${totalCalls}`, `Uptime tercatat ${pct(uptime)}`],
-      ['Kill Switch', payload.killSwitch ? 'AKTIF' : 'NONAKTIF', 'Environment atau kontrol Redis'],
+      ['Uptime forward test', `${uptime.onTime} / ${uptime.scheduled}`, `${pct(uptime.rate == null ? null : uptime.rate * 100)} candle tepat waktu; denominator hanya batas yang lewat`],
+      ['Panggilan aktual', `${successfulCalls} sukses / ${totalCalls} total`, `${recentProcessed} diproses dan ${recentDuplicates} duplikat dari ${calls.length} log panggilan terbaru`],
+      ['Kill Switch', payload.killSwitch ? 'AKTIF' : 'NONAKTIF', `Environment ${killSources.environment ? 'ON' : 'OFF'} · manual ${killSources.manual ? 'ON' : 'OFF'}`],
       ['Daily Loss Limit', state.dailyBlocked ? 'ENTRY DIBLOKIR' : 'Tidak terlampaui', `Batas ${(Number(payload.rules.dailyLossLimitPct) * 100).toFixed(1)}% · hari WIB ${state.dailyKey || '—'}`],
+      ['Ekuitas harian', dailyEquity ? money(dailyEquity.equity) : 'Belum ada sampel harian baru', dailyEquity ? `${dailyEquity.dailyKey || ''} · ${date(dailyEquity.time)} · ${dailyEquity.valuation || 'best bid'}` : `Baseline ${money(state.dailyStartEquity)} untuk hari WIB ${state.dailyKey || '—'}`],
       ['Tick terakhir', date(state.lastCallAt), `Berhasil: ${date(state.lastSuccessAt)}`],
       ['Candle terakhir', date(state.lastCandleTime), `Call terbaru: ${recentCall ? recentCall.status : 'belum ada'}`],
       ['Error terbaru', latestError ? latestError.message : 'Tidak ada error tercatat', latestError ? date(latestError.time) : 'Log error kosong']
@@ -1055,7 +1232,7 @@ $('#templateButton').addEventListener('click', () => {
     const body = document.createElement('tbody');
     for (const row of rows) {
       const tr = document.createElement('tr');
-      for (const [key, format] of columns) {
+      for (const [key, , format] of columns) {
         const td = document.createElement('td');
         td.textContent = format ? format(row[key], row) : String(row[key] == null ? '—' : row[key]);
         tr.appendChild(td);
@@ -1086,30 +1263,127 @@ $('#templateButton').addEventListener('click', () => {
       ['time', 'Waktu', date], ['source', 'Sumber'], ['pair', 'Pair'],
       ['message', 'Pesan']
     ]);
+    const snapshots = logs.snapshots || [];
+    if (!snapshots.length) {
+      live.liveSnapshots.replaceChildren(Object.assign(document.createElement('div'), {className: 'empty', textContent: 'Belum ada snapshot order book.'}));
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    const table = document.createElement('table');
+    const head = document.createElement('thead');
+    const header = document.createElement('tr');
+    for (const title of ['Waktu', 'Pair', 'Best bid', 'Best ask', 'Spread', 'Level bid/ask', 'Snapshot mentah']) {
+      const th = document.createElement('th');
+      th.textContent = title;
+      header.appendChild(th);
+    }
+    head.appendChild(header);
+    const body = document.createElement('tbody');
+    for (const row of snapshots.slice(0, 25)) {
+      const bid = Number(row.bestBid == null ? row.bid : row.bestBid);
+      const ask = Number(row.bestAsk == null ? row.ask : row.bestAsk);
+      const spread = bid > 0 && ask >= bid ? (ask - bid) / ((ask + bid) / 2) * 100 : null;
+      const tr = document.createElement('tr');
+      const values = [date(row.time), row.pair || '—', money(bid), money(ask), pct(spread),
+        `${(row.bids || []).length}/${(row.asks || []).length}`];
+      for (const value of values) {
+        const td = document.createElement('td');
+        td.textContent = value;
+        tr.appendChild(td);
+      }
+      const rawCell = document.createElement('td');
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      summary.textContent = 'Lihat JSON';
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(row.raw || row, null, 2);
+      details.append(summary, pre);
+      rawCell.appendChild(details);
+      tr.appendChild(rawCell);
+      body.appendChild(tr);
+    }
+    table.append(head, body);
+    wrap.appendChild(table);
+    live.liveSnapshots.replaceChildren(wrap);
+  }
+
+  async function setManualKillSwitch(enabled) {
+    const secret = live.controlSecret.value.trim();
+    if (!secret) {
+      live.controlStatus.textContent = 'Masukkan CONTROL_SECRET untuk mengubah status manual.';
+      return;
+    }
+    live.killSwitchOn.disabled = true;
+    live.killSwitchOff.disabled = true;
+    live.controlStatus.textContent = enabled ? 'Mengaktifkan kill switch…' : 'Menonaktifkan kill switch manual…';
+    try {
+      const response = await fetch('/api/control', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {'Authorization': `Bearer ${secret}`, 'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify({enabled, reason: 'Dashboard UAS manual control'})
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || `HTTP ${response.status}`);
+      live.controlSecret.value = '';
+      live.controlStatus.textContent = `Status manual ${enabled ? 'diaktifkan' : 'dinonaktifkan'} dan dicatat pada ${date(result.event.time)}.`;
+      await refreshLive();
+    } catch (error) {
+      live.controlStatus.textContent = error instanceof Error ? error.message : 'Kontrol kill switch gagal.';
+    } finally {
+      live.killSwitchOn.disabled = false;
+      live.killSwitchOff.disabled = false;
+    }
   }
 
   async function refreshLive() {
+    if (liveRefreshInFlight) return;
+    liveRefreshInFlight = true;
+    if (liveRefreshTimer) clearTimeout(liveRefreshTimer);
     live.liveMessage.textContent = 'Memuat data dari API…';
     try {
       const response = await fetch('/api/dashboard', {cache: 'no-store', headers: {'Accept': 'application/json'}});
       const payload = await response.json();
       if (!response.ok || !payload.ok) throw new Error(payload.error || `HTTP ${response.status}`);
       livePayload = payload;
-      live.liveStatus.textContent = payload.status;
+      live.liveStatus.textContent = payload.status === 'RUNNING (ONLINE)'
+        ? payload.status
+        : payload.bootstrap === 'disabled'
+          ? 'BOT DINONAKTIFKAN OLEH KONFIGURASI'
+          : payload.bootstrap === 'failed'
+            ? 'BOOTSTRAP GAGAL — AKAN MENCOBA LAGI'
+            : payload.bootstrap === 'already-attempted'
+              ? 'BOOTSTRAP SUDAH DICOBA — MENUNGGU TICK'
+            : 'BOOTSTRAP DATA PASAR…';
       live.liveStatus.className = payload.status === 'RUNNING (ONLINE)' ? 'up' : 'yl';
       live.liveUpdated.textContent = `Pembaruan ${date(payload.updatedAt)} · pasangan ${payload.pairs.join(', ') || 'belum dikonfigurasi'}`;
-      live.liveMessage.textContent = 'Data live berhasil dimuat. Refresh otomatis tiap 30 detik.';
+      live.liveMessage.textContent = payload.status === 'RUNNING (ONLINE)'
+        ? 'Data live berhasil dimuat. Refresh otomatis tiap 30 detik.'
+        : payload.bootstrap === 'disabled'
+          ? 'Atur BOT_ENABLED=true dan kredensial Upstash di Vercel untuk menjalankan bootstrap.'
+          : payload.bootstrap === 'failed'
+            ? 'Tick bootstrap gagal. Periksa log error/konfigurasi; percobaan otomatis berikutnya setelah cooldown atau tick scheduler.'
+            : payload.bootstrap === 'already-attempted'
+              ? 'Bootstrap otomatis sudah dicoba dalam satu jam terakhir. Menunggu scheduler agar tidak mengulang permintaan pasar.'
+            : 'Server sedang mengambil candle dan order book Indodax untuk bootstrap.';
       renderMetrics(payload);
       renderLogs(payload);
       document.getElementById('liveExport').disabled = false;
+      liveRefreshTimer = setTimeout(refreshLive, 30000);
     } catch (error) {
-      live.liveStatus.textContent = 'DATA API TIDAK TERSEDIA';
+      live.liveStatus.textContent = 'MENGHUBUNGKAN ULANG KE BOT…';
       live.liveStatus.className = 'live-error';
-      live.liveMessage.textContent = error instanceof Error ? error.message : 'Gagal memuat data live.';
+      live.liveMessage.textContent = `${error instanceof Error ? error.message : 'Permintaan dashboard gagal.'} Akan mencoba kembali otomatis.`;
+      liveRefreshTimer = setTimeout(refreshLive, 10000);
+    } finally {
+      liveRefreshInFlight = false;
     }
   }
 
   document.getElementById('liveRefresh').addEventListener('click', refreshLive);
+  live.killSwitchOn.addEventListener('click', () => setManualKillSwitch(true));
+  live.killSwitchOff.addEventListener('click', () => setManualKillSwitch(false));
   document.getElementById('liveExport').addEventListener('click', async event => {
     if (!livePayload) return;
     const button = event.currentTarget;
@@ -1136,7 +1410,6 @@ $('#templateButton').addEventListener('click', () => {
     }
   });
   refreshLive();
-  setInterval(refreshLive, 30000);
 })();
 </script>
 </body>
