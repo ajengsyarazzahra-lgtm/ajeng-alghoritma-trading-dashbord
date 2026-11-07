@@ -13,5 +13,11 @@
     "api/control.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/tick",
+      "schedule": "7 0 * * *"
+    }
+  ]
 }
