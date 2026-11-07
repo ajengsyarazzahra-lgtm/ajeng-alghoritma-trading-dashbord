@@ -2,6 +2,7 @@
 
 const crypto = require('node:crypto');
 const {assertEnvironment} = require('../lib/bot-config');
+const redis = require('../lib/redis');
 const {runTick} = require('../lib/indodax-bot');
 
 function authorized(req, secret) {
@@ -16,8 +17,8 @@ function authorized(req, secret) {
 module.exports = async function tick(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+  if (!['GET', 'POST'].includes(req.method)) {
+    res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({error: 'Method not allowed'});
   }
   const secret = process.env.CRON_SECRET;
@@ -26,9 +27,11 @@ module.exports = async function tick(req, res) {
   }
 
   try {
+    const previousState = await redis.getJson('indodax-bot:v1:state', null);
+    const bootstrap = !previousState || !previousState.lastSuccessAt;
     const pairs = assertEnvironment();
     const result = await runTick(pairs);
-    return res.status(result.status === 'locked' ? 409 : 200).json({ok: true, ...result});
+    return res.status(result.status === 'locked' ? 409 : 200).json({ok: true, bootstrap, ...result});
   } catch (error) {
     const requestId = crypto.randomUUID();
     console.error(`[tick:${requestId}]`, error instanceof Error ? error.message : 'Unknown tick error');
