@@ -163,7 +163,7 @@ footer{padding:12px 16px 20px;border-top:1px solid var(--line);color:var(--mut);
   "schemaVersion": 1,
   "metadata": {
     "strategyName": "",
-    "timeframeMinutes": 60,
+    "timeframeMinutes": 1440,
     "pairs": [],
     "pairSelectionCriteria": "",
     "entryRule": "",
@@ -414,6 +414,7 @@ function normalizeDashboardExport(raw) {
   };
   return validateData({
     schemaVersion: 1,
+    logExportComplete: raw.logExportComplete === true,
     metadata,
     backtest: EMPTY_PART(),
     forward
@@ -629,18 +630,22 @@ function benchmarkEquity(rows, capital) {
   return rows.map(point => ({time: point.time, value: capital * point.value / rows[0].value}));
 }
 
+function signalTimeValue(signal) {
+  return timeValue(signal && (signal.candleTime || signal.time));
+}
+
 function signalKey(signal) {
-  const time = timeValue(signal && signal.time);
+  const time = signalTimeValue(signal);
   const action = normalizeSignalAction(signal && signal.action);
   const pair = String(signal && signal.pair || '').toUpperCase();
-  return time == null || !action || !pair ? null : `${time}|${pair}|${action}`;
+  return time == null || !['buy', 'sell'].includes(action) || !pair ? null : `${time}|${pair}|${action}`;
 }
 
 function signalsInPeriod(rows, start, end) {
   const lo = timeValue(start), hi = timeValue(end);
   return rows.filter(row => {
     const key = signalKey(row);
-    const time = timeValue(row && row.time);
+    const time = signalTimeValue(row);
     return key != null && (lo == null || time >= lo) && (hi == null || time <= hi);
   });
 }
@@ -689,14 +694,26 @@ function compareSignalsAndOrders() {
   };
   const backOrders = dataset.backtest.orders.filter(row => row && isInForwardWindow(row) && String(row.status || '').toLowerCase() === 'filled' && orderKey(row));
   const forwardOrders = dataset.forward.orders.filter(row => row && isInForwardWindow(row) && String(row.status || '').toLowerCase() === 'filled' && orderKey(row));
-  const backByKey = new Map(backOrders.map(row => [orderKey(row), row]));
-  const forwardByKey = new Map(forwardOrders.map(row => [orderKey(row), row]));
-  const matchedOrders = [...backByKey.keys()].filter(key => forwardByKey.has(key));
-  const fillGaps = matchedOrders.map(key => {
-    const a = finite(backByKey.get(key).fillPrice);
-    const b = finite(forwardByKey.get(key).fillPrice);
-    return a != null && b != null && a !== 0 ? Math.abs(b / a - 1) : null;
-  }).filter(value => value != null);
+  const groupOrders = rows => {
+    const grouped = new Map();
+    for (const row of rows) {
+      const key = orderKey(row);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(row);
+    }
+    return grouped;
+  };
+  const backByKey = groupOrders(backOrders);
+  const forwardByKey = groupOrders(forwardOrders);
+  const fillGaps = [];
+  for (const [key, backRows] of backByKey) {
+    const forwardRows = forwardByKey.get(key) || [];
+    for (let index = 0; index < Math.min(backRows.length, forwardRows.length); index++) {
+      const a = finite(backRows[index].fillPrice);
+      const b = finite(forwardRows[index].fillPrice);
+      if (a != null && b != null && a !== 0) fillGaps.push(Math.abs(b / a - 1));
+    }
+  }
   const avgFillGap = fillGaps.length ? fillGaps.reduce((sum, value) => sum + value, 0) / fillGaps.length : null;
   return {backSignals, forwardSignals, missingForward, unexpectedForward, matched, totalKeys, matchedOrders: fillGaps.length, avgFillGap};
 }
@@ -894,7 +911,7 @@ function renderSignalDiff(comparison) {
     return;
   }
   $('#signalDiff').innerHTML = `<table><thead><tr><th>Perbedaan</th><th>Waktu candle</th><th>Pasangan</th><th>Sisi</th><th>Jumlah</th></tr></thead><tbody>${rows.slice(0, 100).map(({type, row, count}) =>
-    `<tr><td>${esc(type)}</td><td>${esc(row.time || '—')}</td><td>${esc(row.pair || '—')}</td><td>${esc(normalizeSignalAction(row.action) || '—')}</td><td>${fmtNumber(count, 0)}</td></tr>`
+    `<tr><td>${esc(type)}</td><td>${esc(row.candleTime || row.time || '—')}</td><td>${esc(row.pair || '—')}</td><td>${esc(normalizeSignalAction(row.action) || '—')}</td><td>${fmtNumber(count, 0)}</td></tr>`
   ).join('')}</tbody></table>${rows.length > 100 ? `<p class="muted small">Menampilkan 100 dari ${rows.length} perbedaan.</p>` : ''}`;
 }
 
@@ -972,6 +989,9 @@ function renderRules(meta, btTrades, fwTrades, btSeries, fwSeries) {
     ['Versi/kode fungsi sinyal bersama', meta.signalCodeRef || 'Belum dicantumkan'],
     ['Modal virtual awal', fmtMoney(finite(meta.initialCapital))],
     ['Freeze date', meta.freezeAt || '—'],
+    ['Kelengkapan log mentah', dataset.logExportComplete === true ? 'Ditandai lengkap oleh API ekspor' : 'Tidak terbukti lengkap; hanya data tersimpan yang dihitung'],
+    ['Status biaya pasar backtest', meta.performanceValidity || meta.marketImpactCostStatus || 'Tidak dicatat'],
+    ['Parity sinyal Python-JavaScript', meta.signalParityVerified === true ? 'Terverifikasi' : 'Belum diverifikasi'],
     ['Maksimum posisi / ukuran posisi', `${meta.maxOpenPositions == null ? '—' : meta.maxOpenPositions} / ${meta.maxPositionPct == null ? '—' : fmtPct(finite(meta.maxPositionPct))}`],
     ['Daily loss limit', meta.dailyLossLimitPct == null ? '—' : fmtPct(finite(meta.dailyLossLimitPct))],
     ['Fee taker di /api/pairs', `${feeApiUrl || 'URL belum dicantumkan'} · ${fmtPct(finite(meta.feeApiTakerRate))}`],
@@ -986,6 +1006,10 @@ function renderRules(meta, btTrades, fwTrades, btSeries, fwSeries) {
   ];
   $('#strategyDetails').innerHTML = `<div class="table-wrap"><table><tbody>${rows.map(([key, value]) => `<tr><th>${esc(key)}</th><td class="wrap">${esc(value)}</td></tr>`).join('')}</tbody></table></div>`;
   const issues = [];
+  if (dataset.logExportComplete !== true) issues.push('Ekspor tidak ditandai lengkap; metrik forward hanya berdasarkan baris yang tersedia dan tidak membuktikan kelengkapan periode.');
+  if (meta.marketImpactCostStatus === 'unavailable_omitted') issues.push('Spread/slippage tidak diterapkan pada backtest; CAGR dan return hanya skenario indikatif setelah fee, bukan performa net dengan biaya pasar lengkap.');
+  else if (btSeries.length && meta.marketImpactCostStatus !== 'measured_pre_freeze') issues.push('Status snapshot spread/slippage pra-freeze pada backtest tidak terverifikasi.');
+  if (meta.signalParityVerified !== true) issues.push('Parity fungsi sinyal backtest Python dengan bot JavaScript belum diverifikasi pada data yang sama.');
   if (meta.forwardOnly) issues.push('Ekspor Vercel hanya berisi log forward; hasil backtest historis tidak disertakan dan tidak dihitung.');
   if (!safeHttpUrl(meta.historicalDataSourceUrl) || !meta.historicalDataAccessDate) issues.push('Cantumkan URL sumber data historis Indodax dan tanggal aksesnya.');
   if (finite(meta.backtestSnapshotCount) == null || finite(meta.backtestSnapshotCount) <= 0) issues.push('Catat jumlah snapshot order book mentah yang digunakan untuk mengukur spread/slippage backtest.');
@@ -1043,9 +1067,11 @@ function renderWarnings() {
 function templateData() {
   return {
     schemaVersion: 1,
+    logExportComplete: false,
     metadata: {
       strategyName: '', timeframeMinutes: 60, pairs: [], pairSelectionCriteria: '',
       entryRule: '', exitRule: '', sizingRule: '', parameters: {}, changesFromUts: '', signalCodeRef: '',
+      signalParityVerified: false,
       initialCapital: null, freezeAt: '', backtestStart: '', backtestEnd: '',
       historicalDataSourceUrl: '',
       historicalDataAccessDate: '', backtestSnapshotCount: null, backtestMedianSlippagePct: null,
