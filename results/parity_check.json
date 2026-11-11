@@ -1,0 +1,42 @@
+{
+  "window": 650,
+  "step": 1,
+  "pairs": {
+    "BTCIDR": {
+      "candlesCompared": 26400,
+      "buySignalMismatches": 0,
+      "maxRelativeDiff": {
+        "fast": 0.0,
+        "slow": 4.0019485192067437e-07,
+        "rsi": 0.0,
+        "atr": 0.0
+      },
+      "mismatchExamples": []
+    },
+    "ETHIDR": {
+      "candlesCompared": 26400,
+      "buySignalMismatches": 0,
+      "maxRelativeDiff": {
+        "fast": 0.0,
+        "slow": 6.636204648692559e-07,
+        "rsi": 0.0,
+        "atr": 0.0
+      },
+      "mismatchExamples": []
+    },
+    "XRPIDR": {
+      "candlesCompared": 26400,
+      "buySignalMismatches": 0,
+      "maxRelativeDiff": {
+        "fast": 0.0,
+        "slow": 8.42635434859499e-07,
+        "rsi": 0.0,
+        "atr": 0.0
+      },
+      "mismatchExamples": []
+    }
+  },
+  "totalCandlesCompared": 79200,
+  "totalBuySignalMismatches": 0,
+  "signalParityPct": 100.0
+}

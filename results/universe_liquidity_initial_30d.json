@@ -1,0 +1,26 @@
+{
+  "source": "Indodax tradingview/history_v2 CSV downloaded 2026-11-10 WIB",
+  "method": "For each UTC day in the first 30 calendar days, sum hourly close multiplied by base volume (IDR); report median and mean of daily totals. This is descriptive evidence, not a historically frozen universe-selection rule.",
+  "windowStart": "2023-11-01T00:00:00Z",
+  "windowEndExclusive": "2023-12-01T00:00:00Z",
+  "pairs": {
+    "BTCIDR": {
+      "days": 30,
+      "medianDailyNotionalIdr": 19910219275.159508,
+      "meanDailyNotionalIdr": 20412594085.243168,
+      "sourceSha256": "28fd4d9abdf53fb6d4c490231eac54ec26c283f927727c547d1682262b145675"
+    },
+    "ETHIDR": {
+      "days": 30,
+      "medianDailyNotionalIdr": 5989260819.169458,
+      "meanDailyNotionalIdr": 7569529932.467087,
+      "sourceSha256": "dd3bbe193cd501cfc926f97a273e55ae784c1f6317fa03524a3289ff9dbc02b1"
+    },
+    "XRPIDR": {
+      "days": 30,
+      "medianDailyNotionalIdr": 4999687186.2101345,
+      "meanDailyNotionalIdr": 6430906712.815354,
+      "sourceSha256": "eb3c959245308cb1cd997bb5b8496cca16c8e622ef8f9f2a21c2c241fd6a7fa7"
+    }
+  }
+}

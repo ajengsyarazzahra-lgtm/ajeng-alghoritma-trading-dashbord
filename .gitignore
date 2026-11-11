@@ -3,3 +3,6 @@
 !.env.example
 __pycache__/
 *.py[cod]
+*.zip
+node_modules/
+PROMPT_ROO.md

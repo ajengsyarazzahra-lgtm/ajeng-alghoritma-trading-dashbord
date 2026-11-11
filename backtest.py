@@ -305,7 +305,7 @@ def backtest(args: argparse.Namespace) -> dict[str, Any]:
     data = {pair: read_candles(Path(args.data), pair) for pair in args.pairs}
     costs, cost_status, snapshot_count, median_spread, median_slippage = read_snapshot_costs(
         Path(args.snapshots) if args.snapshots else None,
-        freeze_at,
+        parse_time(args.snapshot_cutoff) if args.snapshot_cutoff else freeze_at,
         tuple(args.pairs),
     )
     by_time = {pair: {int(row["time"]): index for index, row in enumerate(rows)} for pair, rows in data.items()}
@@ -361,11 +361,12 @@ def backtest(args: argparse.Namespace) -> dict[str, Any]:
                 for k in range(1, len(recent))
             )
             valid = contiguous and bar["volume"] > 0 and all(
-                row["volume"] >= 0 and min(row["open"], row["high"], row["low"], row["close"]) > 0
+                row["volume"] > 0 and min(row["open"], row["high"], row["low"], row["close"]) > 0
                 for row in recent
             )
             if not valid:
-                signals.append({"time": iso(candle_time), "pair": pair, "action": "hold", "reason": "data quality invalid"})
+                signals.append({"time": iso(candle_time), "pair": pair, "action": "hold",
+                                "reason": "data quality invalid in indicator window (gap, non-positive OHLC, or volume)"})
                 continue
             position = positions.get(pair)
             buy = bool(ind["crossedUp"] and ind["fast"] > ind["slow"]
@@ -472,8 +473,10 @@ def backtest(args: argparse.Namespace) -> dict[str, Any]:
                 "fastEma": 30, "slowEma": 100, "rsiPeriod": 14, "rsiMin": 50,
                 "rsiMax": 75, "atrPeriod": 14, "atrMultiple": 3, "breakoutLookback": 5,
             },
-            "signalCodeRef": "Port Python terpisah dari lib/indodax-bot.js; commit freeze dan parity per candle belum diverifikasi.",
+            "signalCodeRef": "Port Python terpisah dari lib/indodax-bot.js; jalankan tools/parity_check.py untuk membandingkan indikator dan sinyal per candle.",
             "snapshotSource": str(args.snapshots) if args.snapshots else None,
+            "snapshotCutoff": args.snapshot_cutoff or FREEZE_AT,
+            "snapshotCutoffAfterFreeze": bool(args.snapshot_cutoff and parse_time(args.snapshot_cutoff) > freeze_at),
             "signalParityVerified": False,
             "backtestSnapshotCount": snapshot_count,
             "backtestMedianSpreadPct": median_spread,
@@ -519,12 +522,15 @@ def main() -> int:
     download.add_argument("--pairs", nargs="+", default=list(PAIRS))
     download.add_argument("--out", default="data/indodax_1h")
     run = subparsers.add_parser("run", help="Jalankan backtest dari CSV candle lokal")
-    run.add_argument("--data", default="data/indodax_d1h")
+    run.add_argument("--data", default="data/indodax_1h")
     run.add_argument("--snapshots", help="JSONL spread/slippage terukur sebelum freeze (opsional; bila absen, biaya pasar tidak diterapkan)")
     run.add_argument("--start", required=True)
     run.add_argument("--end", required=True)
-    run.add_argument("--timeframe-minutes", type=int, choices=(60, 240, 1440), default=1440,
-                     help="Timeframe candle CSV (default: 1440 untuk harian)")
+    run.add_argument("--timeframe-minutes", type=int, choices=(60, 240, 1440), default=60,
+                     help="Timeframe candle CSV (default: 60 = 1 jam, sama dengan bot)")
+    run.add_argument("--snapshot-cutoff", default=None,
+                     help="ISO waktu batas snapshot yang dipakai. Default = FREEZE_AT (hanya snapshot sebelum freeze). "
+                          "Bila diisi setelah freeze, hasil ditandai snapshotCutoffAfterFreeze=true di metadata.")
     run.add_argument("--pairs", nargs="+", default=list(PAIRS))
     run.add_argument("--out", default="results/backtest.json")
     args = parser.parse_args()
