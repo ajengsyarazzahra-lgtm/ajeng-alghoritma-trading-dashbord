@@ -1,13 +1,13 @@
 # Fee dan minimum order — sumber dan status verifikasi
 
-Dicek: 12 November 2026. **Bagian bertanda [ISI] harus kamu lengkapi sendiri** dari halaman resmi / profil akun Indodax.
+Diperiksa ulang: 13 November 2026. **Bagian bertanda [ISI] harus dilengkapi dari halaman resmi / profil akun Indodax.**
 
 ## Nilai yang dipakai bot (`lib/bot-config.js`)
 - Taker fee all-in: **0,51%** (beli dan jual)
 - Minimum order: **Rp25.000**
 
 ## Sumber 1 — API publik (terverifikasi dari repo)
-- `https://indodax.com/api/pairs`, diakses 10 Nov 2026 21:54 WIB: `trade_fee_percent_taker = 0.2`, `trade_min_base_currency = 10000` untuk BTCIDR, ETHIDR, XRPIDR.
+- `https://indodax.com/api/pairs`, diakses 10 Nov 2026 21:54 WIB dan diperiksa ulang 13 Nov 2026: BTCIDR, ETHIDR, dan XRPIDR masing-masing menampilkan `trade_fee_percent_taker = 0.2` dan `trade_min_base_currency = 10000`.
 - Catatan: nilai ini hanya komponen trading fee, **bukan all-in** (belum termasuk pajak PPh 0,21% saat jual dan fee CFX).
 
 ## Sumber 2 — Halaman resmi rincian biaya
@@ -16,6 +16,7 @@ Dicek: 12 November 2026. **Bagian bertanda [ISI] harus kamu lengkapi sendiri** d
 - [ISI] Tanggal akses: ____ 
 - Cara cepat: Profil & Pengaturan -> Informasi Transaksi (web), atau Profil -> Pengaturan Pribadi -> Lihat Detail di "Biaya Trading" (aplikasi Pro). Screenshot halaman itu dan simpan di folder `bukti/`.
 - `https://help.indodax.com/rincian-biaya-transaksi/` memberi HTTP 404 (README). Jangan dipakai sebagai sitasi.
+- Pemeriksaan ulang 13 Nov 2026 juga tidak memperoleh rincian all-in dari halaman tersebut; tarif resmi beli/jual tetap belum terverifikasi.
 
 ## Angka dari sumber pihak ketiga (bukan sumber resmi, hanya untuk sanity check)
 Sumber-sumber ini **tidak sepakat satu sama lain** dan sebagian sudah usang, jadi jangan dikutip sebagai tarif resmi:
