@@ -2,9 +2,8 @@
 
 ## Tersedia
 
-- `snapshots_laptop.jsonl`: tiga snapshot order book BTCIDR, ETHIDR, XRPIDR yang diambil manual pada 10 November 2026. Data ini nyata tetapi pasca-freeze, sehingga tidak boleh dipakai untuk mengklaim biaya pasar historis pra-freeze.
+- `snapshots_laptop.jsonl`: snapshot order book BTCIDR, ETHIDR, dan XRPIDR yang dikumpulkan dari laptop. Isi file dapat bertambah saat collector berjalan. Snapshot ini pasca-freeze dan bukan log panggilan, order, atau ekuitas forward bot; jangan gunakan untuk mengklaim biaya historis pra-freeze.
 - `PANDUAN_SNAPSHOT.md`: cara menjalankan collector dan memeriksa/menghentikan tugas hourly Task Scheduler lokal.
-- `LAPORAN_VSCODE.md`: status pekerjaan, pengujian, audit, dan batas bukti.
 
 ## Belum tersedia
 
