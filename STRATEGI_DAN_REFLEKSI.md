@@ -2,6 +2,8 @@
 
 > Semua perubahan dan pengujian yang dilakukan setelah tenggat freeze dicatat sebagai pasca-freeze. Ini bukan bukti freeze 4 November atau forward test 10 hari.
 
+Dashboard live: [https://ajeng-lq45-dashboard.vercel.app/](https://ajeng-lq45-dashboard.vercel.app/)
+
 ## Status bukti dan perubahan dari versi UTS
 
 - Strategi tetap dry-run: bot tidak mengirim order nyata atau memakai API key Indodax untuk trading.

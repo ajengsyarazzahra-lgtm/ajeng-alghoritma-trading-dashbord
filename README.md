@@ -1,6 +1,6 @@
 # Bot UAS Indodax — Dry Run
 
-Bot ini mensimulasikan order dari data pasar publik Indodax; tidak ada order nyata dan tidak diperlukan API key Indodax. Data/status live: [dashboard Vercel](https://ajeng-algorithm-trading-dashboard.vercel.app/). Repository: [ajengsyarazzahra-lgtm/ajeng-alghoritma-trading-dashbord](https://github.com/ajengsyarazzahra-lgtm/ajeng-alghoritma-trading-dashbord).
+Bot ini mensimulasikan order dari data pasar publik Indodax; tidak ada order nyata dan tidak diperlukan API key Indodax. Data/status live: [dashboard Vercel](https://ajeng-lq45-dashboard.vercel.app/). Repository: [ajengsyarazzahra-lgtm/ajeng-alghoritma-trading-dashbord](https://github.com/ajengsyarazzahra-lgtm/ajeng-alghoritma-trading-dashbord).
 
 ## Struktur dan status bukti
 
@@ -171,6 +171,6 @@ Paket akhir perlu source code, data yang dipakai, backtest dan jendela forward y
 
 Dashboard offline tidak memuat CDN atau script/style eksternal. Untuk analisis lokal, unduh ekspor lengkap melalui `/api/dashboard?full=1`, lalu buka `public/index.html`, pilih tombol **Muat log JSON**, dan pilih file ekspor. Berkas diproses di browser lokal; periksa `logExportComplete` karena ekspor yang terpotong tidak membuktikan forward test lengkap. `generate_log.py` hanya menulis template skema kosong; skrip ini tidak menghasilkan harga, order, atau hasil simulasi.
 
-Dashboard live: [https://ajeng-algorithm-trading-dashboard.vercel.app/](https://ajeng-algorithm-trading-dashboard.vercel.app/)
+Dashboard live: [https://ajeng-lq45-dashboard.vercel.app/](https://ajeng-lq45-dashboard.vercel.app/)
 
 GitHub: [https://github.com/ajengsyarazzahra-lgtm/ajeng-alghoritma-trading-dashbord](https://github.com/ajengsyarazzahra-lgtm/ajeng-alghoritma-trading-dashbord)
