@@ -83,6 +83,14 @@ Backtest berhasil menghasilkan 26.304 titik ekuitas, 838 order, dan 419 trade te
 
 Parity pada 26.400 candle per pair (79.200 total) menghasilkan nol perbedaan sinyal beli; selisih relatif maksimum EMA lambat berada di bawah `0.00000085`. Detail per pair dan contoh tersimpan di `results/parity_check.json`. Pemeriksaan ini membandingkan perhitungan indikator dan kondisi sinyal, bukan mengesahkan kualitas data atau parity eksekusi live.
 
+### Sumber dan validasi data
+
+Data candle 1 jam BTC/IDR, ETH/IDR, dan XRP/IDR (`data/indodax_1h/`, 1 November 2023 sampai 9 November 2026) ditarik langsung dari endpoint publik Indodax `tradingview/history_v2` dengan `backtest.py download`. Data harian di `data/indodax_harian/` berasal dari arsip data tugas sebelumnya dan berakhir pada 25 September 2026. Arsip itu tidak dipakai untuk menjalankan backtest 1 jam; fungsinya hanya sebagai pembanding silang.
+
+Cek silang (`python tools/cek_silang_data.py`, hasil di `results/cek_silang_harian_vs_1jam.json`): candle 1 jam diagregasi per hari UTC lalu dibandingkan dengan candle harian pada tanggal yang sama. Harga penutupan cocok pada 1049 dari 1060 hari untuk BTC/IDR, 1051 dari 1060 untuk ETH/IDR, dan 1049 dari 1060 untuk XRP/IDR (sekitar 99%). Selisih pada sisa hari belum dianalisis penyebabnya. Cek ini hanya menunjukkan kedua sumber konsisten; asal data arsip tidak diverifikasi secara independen.
+
+Keterbatasan: universe BTC, ETH, dan XRP adalah pair yang masih tersedia saat ini, sehingga bias survivorship tidak bisa dikesampingkan. Spread dan slippage di backtest berasal dari snapshot order book yang terkumpul setelah tanggal freeze.
+
 ### Fee, minimum order, dan pembulatan
 
 `https://indodax.com/api/pairs` merespons HTTP 200 pada 10 November 2026 pukul 21:54 WIB. Untuk BTCIDR, ETHIDR, dan XRPIDR, respons mencatat `trade_fee_percent_taker=0.2`, `trade_min_base_currency=10000`, `quantity_increment=1e-8`, dan `price_round=8`. Bot memakai fee 0,51% dan minimum Rp25.000, keduanya lebih konservatif/lebih tinggi daripada nilai API yang terbaca pada tanggal akses. Harga simulasi diambil langsung dari level order book; bot tidak mengirim limit price.
