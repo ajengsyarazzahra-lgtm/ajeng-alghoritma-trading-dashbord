@@ -33,3 +33,10 @@ mencatat semua perubahan sesudahnya agar bisa diaudit. Riwayat commit tidak diub
 - Karena freeze terlewat, komponen kecocokan backtest–forward tidak dapat dibuktikan melalui commit freeze.
 - Forward test baru dimulai setelah bot benar-benar berjalan dan log tercatat; jendela 10 hari harus dihitung dari
   log nyata. Jangan menulis hasil di luar yang tercatat.
+
+## Perubahan operasional — 13 November 2026, 13:01 WIB
+
+- Alasan: HTTP 403 dari Indodax ke Vercel sejak 7 November 2026 pukul 20.57 WIB, sebagaimana tercatat di log dashboard dan GitHub Actions.
+- Perubahan: region fungsi Vercel diarahkan ke `sin1` melalui `vercel.json`.
+- Tidak ada perubahan aturan strategi, parameter, atau universe.
+- Hasil setelah deploy: **BELUM DIUJI**.
